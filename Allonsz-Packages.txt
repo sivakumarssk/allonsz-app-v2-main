@@ -1,0 +1,86 @@
+npx create-expo-app --template blank@51.0.28
+
+npm install nativewind@2.0.11
+npm install --save-dev tailwindcss@3.3.2
+
+npx tailwindcss init
+
+npm install @react-navigation/native@6.1.18
+npx expo install react-native-screens react-native-safe-area-context
+npm install @react-navigation/native-stack@6.11.0
+
+npx expo install expo-font
+
+npx expo install lottie-react-native
+
+npm i formik
+npm i axios
+npm i yup
+
+npm i react-native-select-dropdown //waste
+npm i react-native-element-dropdown
+
+...
+npm i react-native-select-dropdown
+
+npm i react-native-dropdown-select-list
+...
+
+npm i react-native-vector-icons
+
+npx expo install expo-image-picker
+
+npm i react-redux
+npm install @reduxjs/toolkit
+
+npx expo install @react-native-async-storage/async-storage
+
+npm i react-native-otp-entry
+
+npx expo install react-native-webview
+
+npm install react-native-gesture-handler
+
+npx expo install react-native-svg
+
+npm i react-native-toast-message
+
+npm i react-native-loading-spinner-overlay
+
+npx expo install expo-clipboard
+npx expo install expo-linking
+
+npx expo install expo-mail-composer
+
+npm install react-native-razorpay --save
+npx expo prebuild //deleted
+
+npm i react-native-toast-notifications
+
+npm install lottie-react-native
+
+
+npm i react-native-shimmer-placeholder
+npm install react-native-linear-gradient
+npx expo install expo-linear-gradient
+
+npx expo install react-native-pager-view
+
+npm i react-native-raw-bottom-sheet
+
+npx expo install lottie-react-native
+
+npm i react-native-razorpay
+
+npx expo install expo-dev-client
+
+npx expo install react-native-svg
+
+npx expo install @react-native-community/datetimepicker
+
+npx expo install expo-video //removed
+npx expo install expo-av
+
+npm install date-fns --save
+
+npx expo install @react-native-community/netinfo

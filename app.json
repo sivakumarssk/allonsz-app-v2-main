@@ -1,0 +1,72 @@
+{
+  "expo": {
+    "name": "Allons-Z",
+    "slug": "allons-z",
+    "version": "1.1.4",
+    "newArchEnabled": false,
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aits.allonsz",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "The app needs access to your camera to allow you to take photos for your profile or scan QR codes for accessing content.",
+        "NSPhotoLibraryUsageDescription": "ur app needs access to your photo library to allow you to upload profile pictures, share images, and enhance your experience. For example, you can select and upload a profile photo to personalize your account.",
+        "NSMicrophoneUsageDescription": "The app requires microphone access to allow you to record audio for video content and voice messages.",
+        "NSContactsUsageDescription": "The app needs access to your contacts to help you find and connect with friends within the app."
+      }
+    },
+    "android": {
+      "versionCode": 2,
+      "usesCleartextTraffic": true,
+      "allowHttp": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.aits.allonsz"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          },
+          "ios": {
+            "flipper": true
+          }
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with your friends."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e7a90378-5c78-4002-8079-00c486602f32"
+      }
+    },
+    "owner": "aits"
+  }
+}
