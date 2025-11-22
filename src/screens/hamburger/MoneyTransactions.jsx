@@ -142,36 +142,59 @@ const MoneyTransactions = () => {
             item.id?.toString() || index.toString()
           }
           renderItem={({ item }) => {
+            const isDebit = item.type !== "Credit";
             return (
-              <View className="bg-white p-4 mb-4 rounded-lg shadow-md flex flex-row justify-between items-center w-full">
+              <View
+                className="p-4 mb-4 rounded-lg shadow-md flex flex-row justify-between items-center w-full"
+                style={{
+                  backgroundColor: isDebit ? '#FEF2F2' : '#F0FDF4',
+                  borderLeftWidth: 4,
+                  borderLeftColor: isDebit ? '#EF4444' : '#22C55E',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 3,
+                  elevation: 3,
+                }}
+              >
                 <View className="w-[15%]">
-                  {item.type !== "Credit" ? (
-                    <View className="w-[40px] h-[40px] bg-red-100 rounded-xl flex justify-center items-center">
+                  {isDebit ? (
+                    <View className="w-[40px] h-[40px] bg-red-200 rounded-xl flex justify-center items-center">
                       <MaterialCommunityIcons
                         name="arrow-top-right"
                         size={24}
-                        color="black"
+                        color="#DC2626"
                       />
                     </View>
                   ) : (
-                    <View className="w-[40px] h-[40px] bg-green-100 rounded-xl flex justify-center items-center">
+                    <View className="w-[40px] h-[40px] bg-green-200 rounded-xl flex justify-center items-center">
                       <MaterialCommunityIcons
                         name="arrow-bottom-left"
                         size={24}
-                        color="black"
+                        color="#16A34A"
                       />
                     </View>
                   )}
                 </View>
-                <View className="w-[83%] bg-re d-500">
-                  <View className="flex flex-row justify-between items-center">
-                    <View className="text-base font-semibold text-gray-800">
-                      <Text className="font-normal font-montmedium text-[12px]">
-                        Transaction date :{" "}
+                <View className="w-[83%]">
+                  <View className="flex flex-row justify-between items-center mb-1">
+                    <View
+                      className="px-2 py-1 rounded-full"
+                      style={{
+                        backgroundColor: isDebit ? '#FEE2E2' : '#DCFCE7'
+                      }}
+                    >
+                      <Text
+                        className="font-bold font-montmedium text-[10px]"
+                        style={{
+                          color: isDebit ? '#DC2626' : '#16A34A'
+                        }}
+                      >
+                        {isDebit ? 'DEBIT' : 'CREDIT'}
                       </Text>
                     </View>
                     <View>
-                      <Text className="font-semibold font-montmedium text-[12px]">
+                      <Text className="font-semibold font-montmedium text-[11px] text-gray-600">
                         {new Intl.DateTimeFormat("en-GB", {
                           day: "2-digit",
                           month: "2-digit",
@@ -188,27 +211,26 @@ const MoneyTransactions = () => {
                   </View>
 
                   <View className="flex flex-row justify-between items-center">
-                    <Text className="font-normal font-montmedium text-[12px]">
+                    <Text className="font-normal font-montmedium text-[12px] text-gray-700">
                       Amount:
                     </Text>
 
                     <View className="flex flex-row items-center">
-                      {/* {item.type !== "Credit" ? (
-                      <FontAwesome5 name="minus" size={13} color="red" />
-                    ) : (
-                      <FontAwesome6 name="plus" size={15} color="#00b300" />
-                    )} */}
+                      {isDebit ? (
+                        <FontAwesome5 name="minus" size={13} color="#DC2626" />
+                      ) : (
+                        <FontAwesome6 name="plus" size={15} color="#16A34A" />
+                      )}
                       <MaterialIcons
                         name="currency-rupee"
-                        size={16}
-                        color={item.type !== "Credit" ? "red" : "#00b300"}
+                        size={18}
+                        color={isDebit ? "#DC2626" : "#16A34A"}
                       />
                       <Text
-                        className={`text-base text-[18px] font-semibold font-montmedium ${
-                          item.type !== "Credit"
-                            ? "text-red-500"
-                            : "text-[#00b300]"
-                        }`}
+                        className="text-base text-[18px] font-bold font-montmedium"
+                        style={{
+                          color: isDebit ? '#DC2626' : '#16A34A'
+                        }}
                       >
                         {item.amount}
                       </Text>

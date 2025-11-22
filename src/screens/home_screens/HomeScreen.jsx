@@ -16,10 +16,10 @@ import CustomStatusBar from "../custom_screens/CustomStatusBar";
 import Feather from "@expo/vector-icons/Feather";
 import CounTime from "../custom_screens/CounTime";
 import { TouchableOpacity } from "react-native";
-
+import Ionicons from "@expo/vector-icons/Ionicons";
 import EvilIcons from "@expo/vector-icons/EvilIcons";
 import { useNavigation } from "@react-navigation/native";
-import { All_Trips, Get_Setting, Get_Timer } from "../../Network/ApiCalling";
+import { All_Trips, Check_Timer_Alert, Get_Setting, Get_Timer } from "../../Network/ApiCalling";
 import { useDispatch, useSelector } from "react-redux";
 
 import ShimmerComp from "../custom_screens/ShimmerComp";
@@ -68,9 +68,12 @@ const HomeScreen = ({ route }) => {
 
   const [GetTime, setGetTime] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [timerAlert,setTimerAlert] = useState({})
+  const [currentAlertIndex, setCurrentAlertIndex] = useState(0);
 
   useEffect(() => {
     getSetting();
+    tripTimerAlert();
     // CountDownTime();
   }, []);
 
@@ -223,6 +226,22 @@ const HomeScreen = ({ route }) => {
       setLoading(false);
     }
   };
+  
+  const tripTimerAlert = async () =>{
+    try {
+      setLoading(true)
+      const res = await Check_Timer_Alert(token)
+      console.log('checkAlert', res);
+      
+      if(res.status === 200){
+        setTimerAlert(res.data)
+      }
+    } catch (error) {
+      console.log('Error in Geting the Trip Timer Alert', error);
+    } finally {
+      setLoading(false)
+    }
+  }
 
   //get countDown (INCOMMENT)
   const CountDownTime = async () => {
@@ -377,6 +396,84 @@ const HomeScreen = ({ route }) => {
           <Feather name="search" size={24} color="black" />
         </View>
       </View>
+
+      {/* Timer Alert Section */}
+      {timerAlert?.has_alert && timerAlert?.timers?.length > 0 && (
+        <View className="w-[95%] mx-auto mb-3">
+          <View
+            className="bg-red-50 border-l-4 border-red-500 rounded-lg p-3 shadow-sm"
+            style={{
+              backgroundColor: "#FEF2F2",
+              borderLeftColor: "#EF4444",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.1,
+              shadowRadius: 2,
+              elevation: 2,
+            }}
+          >
+            <View className="flex flex-row items-center justify-between">
+              {/* Previous Button */}
+              <TouchableOpacity
+                onPress={() => setCurrentAlertIndex((prev) =>
+                  prev > 0 ? prev - 1 : timerAlert.timers.length - 1
+                )}
+                disabled={timerAlert.timers.length === 1}
+                className="p-1"
+              >
+                <Ionicons
+                  name="chevron-back"
+                  size={24}
+                  color={timerAlert.timers.length === 1 ? "#FCA5A5" : "#DC2626"}
+                />
+              </TouchableOpacity>
+
+              {/* Alert Content */}
+              <View className="flex-1 flex flex-row items-start px-2">
+                <View className="mr-2 mt-[2px]">
+                  <Ionicons name="time-outline" size={20} color="#DC2626" />
+                </View>
+                <View className="flex-1">
+                  <View className="flex flex-row items-center justify-between mb-1">
+                    <Text className="font-montmedium font-semibold text-[13px] text-red-700">
+                      {timerAlert.timers[currentAlertIndex].package_name}
+                    </Text>
+                    <View className="bg-red-100 px-2 py-1 rounded-full">
+                      <Text className="font-montmedium font-bold text-[11px] text-red-700">
+                        {timerAlert.timers[currentAlertIndex].days_remaining}{' '}
+                        {timerAlert.timers[currentAlertIndex].days_remaining === 1 ? 'day' : 'days'} left
+                      </Text>
+                    </View>
+                  </View>
+                  <Text className="font-montmedium text-[12px] text-red-600 leading-[18px]">
+                    {timerAlert.timers[currentAlertIndex].alert_message}
+                  </Text>
+                  {timerAlert.timers.length > 1 && (
+                    <Text className="font-montmedium text-[10px] text-red-500 mt-1 text-center">
+                      {currentAlertIndex + 1} of {timerAlert.timers.length}
+                    </Text>
+                  )}
+                </View>
+              </View>
+
+              {/* Next Button */}
+              <TouchableOpacity
+                onPress={() => setCurrentAlertIndex((prev) =>
+                  prev < timerAlert.timers.length - 1 ? prev + 1 : 0
+                )}
+                disabled={timerAlert.timers.length === 1}
+                className="p-1"
+              >
+                <Ionicons
+                  name="chevron-forward"
+                  size={24}
+                  color={timerAlert.timers.length === 1 ? "#FCA5A5" : "#DC2626"}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
 
       {/* {GetTime.length > 0 &&
         GetTime.map((timer) => {

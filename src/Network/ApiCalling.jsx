@@ -598,3 +598,12 @@ export const Delete_Account = async (token) => {
     },
   });
 };
+
+export const Check_Timer_Alert = async (token)=>{
+  return await axios.get(`${baseUrl}/api/check-timer-alert`,{
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
