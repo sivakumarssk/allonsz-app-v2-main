@@ -280,7 +280,17 @@ const RTTWalletMoney = () => {
             item.id?.toString() || index.toString()
           }
           renderItem={({ item, index }) => {
-            const { amount, transfer_details, status, created_at } = item;
+            const { amount, transfer_details, status, created_at, rejection_reason } = item;
+
+            // Helper function to capitalize first letter
+            const capitalizeFirst = (str) => {
+              if (!str) return "";
+              return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+            };
+
+            // Normalize status to lowercase for comparison (API returns lowercase)
+            const statusLower = status?.toLowerCase() || "";
+            const displayStatus = capitalizeFirst(status);
 
             return (
               <View
@@ -309,7 +319,7 @@ const RTTWalletMoney = () => {
                   <Text className="text-sm text-gray-800 flex-1">{amount}</Text>
                 </View>
 
-                {status === "Accepted" && (
+                {statusLower === "accepted" && (
                   <View className="flex-row mb-2">
                     <Text className="font-medium text-sm text-gray-600 w-1/2">
                       Transfer Details:
@@ -326,16 +336,29 @@ const RTTWalletMoney = () => {
                   </Text>
                   <Text
                     className={`font-semibold text-sm ${
-                      status === "Pending"
+                      statusLower === "pending"
                         ? "text-orange-500"
+                        : statusLower === "rejected"
+                        ? "text-red-500"
                         : "text-green-500"
                     } flex-1`}
                   >
-                    {status}
+                    {displayStatus}
                   </Text>
                 </View>
 
-                {status === "Pending" ? (
+                {statusLower === "rejected" && rejection_reason && (
+                  <View className="mt-2 p-3 bg-red-50 rounded-lg border border-red-200">
+                    <Text className="font-medium text-sm text-red-800 mb-1">
+                      Rejection Reason:
+                    </Text>
+                    <Text className="text-sm text-red-700">
+                      {rejection_reason}
+                    </Text>
+                  </View>
+                )}
+
+                {statusLower === "pending" ? (
                   <View className="">
                     <Text className="text-xs text-red-400 italic">
                       Please note: The withdrawal will be settled within{" "}

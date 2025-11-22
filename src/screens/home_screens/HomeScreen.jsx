@@ -354,23 +354,39 @@ const HomeScreen = ({ route }) => {
             navigation.navigate("SelectedTour", { tourId: item.id })
           }
         >
-          <View className="bg-white rounded-xl p-[6px]">
+          <View className="bg-white rounded-xl p-[6px]" style={{ height: 250, overflow: "hidden" }}>
             <Image
               source={{ uri: item.photo }}
               className="w-full h-[155px] rounded-lg"
+              resizeMode="cover"
             />
             <View className="">
-              <Text className="font-montmedium font-bold text-[14px] leading-[16px] my-2 ml-1">
+              <Text
+                className="font-montmedium font-bold text-[14px] leading-[16px] my-2 ml-1"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={{ maxWidth: "100%", overflow: "hidden" }}
+              >
                 {item.name}
               </Text>
               <View className="flex flex-row items-center mb-[10px]">
                 <EvilIcons name="location" size={25} color="black" />
-                <Text className="text-smallText font-montmedium font-normal text-[11px] leading-[16px]">
+                <Text
+                  className="text-smallText font-montmedium font-normal text-[11px] leading-[16px]"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  style={{ flex: 1, overflow: "hidden" }}
+                >
                   {item.place}, {item.area}
                 </Text>
               </View>
               <View>
-                <Text className="font-montmedium font-semibold text-[14px] leading-[16px] text-smallText ml-[7px]">
+                <Text
+                  className="font-montmedium font-semibold text-[14px] leading-[16px] text-smallText ml-[7px]"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  style={{ overflow: "hidden", maxWidth: "100%" }}
+                >
                   <Text className="text-primary"> ₹ {item.price}</Text>/Person
                 </Text>
               </View>

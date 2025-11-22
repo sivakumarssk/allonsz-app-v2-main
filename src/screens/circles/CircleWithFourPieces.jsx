@@ -10,7 +10,7 @@ export default function CircleWithFourPieces({
   outterPices,
   degree,
   setOtherData,
-  setOpenData,
+  // setOpenData,
   lastPosColor,
 }) {
   const radiusInner = 170; //190 Radius of the inner circle 110
@@ -75,7 +75,7 @@ export default function CircleWithFourPieces({
                 onPress={() => {
                   // console.log("Path clicked:", segment);
                   setOtherData(segment.member);
-                  setOpenData(true);
+                  // setOpenData(true);
                 }}
               />
               <SvgText
@@ -136,7 +136,7 @@ export default function CircleWithFourPieces({
                 onPress={() => {
                   // console.log(`Outer Circle Path clicked: ${segment.user}`);
                   setOtherData(segment.member);
-                  setOpenData(true);
+                  // setOpenData(true);
                 }}
               />
               <SvgText
