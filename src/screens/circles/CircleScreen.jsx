@@ -113,9 +113,9 @@ const CircleScreen = () => {
       />
 
       <NavReferral>Referal Circles</NavReferral>
-      <View className="w-[95%] mx-auto">
+      <View className="flex-1 w-[95%] mx-auto">
         <Text className="font-montmedium font-semibold text-center leading-[22px] text-[13px] text-smallText">
-          You’ve unlocked your packages! Start enjoying the benefits today. 💼
+          You've unlocked your packages! Start enjoying the benefits today. 💼
         </Text>
 
         {/* {circles.map((item, index) => {
@@ -142,6 +142,7 @@ const CircleScreen = () => {
                   circlesName: item.package.name,
                   packageId: item.package.id,
                   circleCode: item.name,
+                  circle: item, // Pass full circle object for 5-member circle logic
                 });
               }}
             >
@@ -169,7 +170,7 @@ const CircleScreen = () => {
               </View>
             </TouchableOpacity>
           )}
-          contentContainerStyle={{}}
+          contentContainerStyle={{ paddingBottom: 20 }}
         />
       </View>
     </>

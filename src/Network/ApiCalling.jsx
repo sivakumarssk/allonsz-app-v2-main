@@ -388,9 +388,10 @@ export const Get_Packages = async (token) => {
 };
 
 //create-razorpay-order
-export const Create_Razorpay_Order = async (packageId, token) => {
+export const Create_Razorpay_Order = async (packageId, token, paymentType = "razorpay") => {
   const formData = new FormData();
   formData.append("package_id", packageId);
+  formData.append("payment_type", paymentType);
 
   return await axios.post(`${baseUrl}/api/create-razorpay-order`, formData, {
     headers: {
@@ -607,3 +608,26 @@ export const Check_Timer_Alert = async (token)=>{
     },
   })
 }
+
+//Get Circle Rewards
+export const Get_CircleRewards = async (token) => {
+  return await axios.get(`${baseUrl}/api/circle-rewards`, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+//Get User by Referral Code
+export const Get_UserByReferral = async (referalCode, token) => {
+  const formData = new FormData();
+  formData.append("referal_code", referalCode);
+
+  return await axios.post(`${baseUrl}/api/get-user-by-referral`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

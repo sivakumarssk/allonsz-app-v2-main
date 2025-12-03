@@ -3,6 +3,7 @@ import {
   Alert,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -17,12 +18,25 @@ import CircleWithFourPieces from "./CircleWithFourPieces";
 import { useSelector } from "react-redux";
 import { Get_OthersCircles } from "../../Network/ApiCalling";
 import { useNavigation } from "@react-navigation/native";
+import { useToast } from "react-native-toast-notifications";
+import {
+  is5MemberCircle,
+  getCircleStatus,
+} from "../../utils/CircleHelpers";
 
 const SelectedCircles = ({ route }) => {
-  const { memberDetails, circlesName, circleCode, packageId } = route.params;
+  const {
+    memberDetails,
+    circlesName,
+    circleCode,
+    packageId,
+    circle: circleData,
+  } = route.params;
   // console.log("memberDetails>>>", memberDetails);
 
   const navigation = useNavigation();
+  const toast = useToast();
+  const token = useSelector((state) => state.login.token);
 
   const userName = useSelector((state) => state.login.userName);
 
@@ -94,10 +108,16 @@ const SelectedCircles = ({ route }) => {
         setDegree(180);
 
         generateCircleData7(memberDetails);
+      } else if (circle_Length === 5 && circleData && is5MemberCircle(circleData)) {
+        // Handle 5-member circle
+        setOutterPices(4);
+        setInnerPices(0);
+        setDegree(180);
+        generateCircleData5(memberDetails);
       } else {
-        outterPices = 16;
-        innerPices = 4;
-        degree = 180;
+        setOutterPices(16);
+        setInnerPices(4);
+        setDegree(180);
       }
     } catch (error) {
       console.log(error);
@@ -210,6 +230,37 @@ const SelectedCircles = ({ route }) => {
     setLastPosColor(newLastcolor);
   };
 
+  const generateCircleData5 = (data) => {
+    const newOuterData = [];
+    let newLastPosition = null;
+    let newLastcolor = null;
+
+    data.forEach((member) => {
+      const position = parseInt(member.position);
+      const colorCode = member.color || "#44699c";
+      const user = member?.user?.username
+        ? member?.user?.username.length > 8
+          ? member?.user?.username.slice(0, 8).toLowerCase() + ".."
+          : member?.user?.username.toLowerCase()
+        : "";
+
+      if ([1, 2, 3, 4].includes(position)) {
+        // Positions 1-4 are outer (direct referrals)
+        newOuterData.push({ position, user, color: colorCode, member });
+      } else if (position === 5) {
+        // Position 5 is center (circle owner)
+        newLastPosition = member.user;
+        newLastcolor = colorCode || "#FF9800";
+      }
+    });
+
+    setOuterData(newOuterData);
+    setInnerData([]); // No inner circle for 5-member
+    setLastPosition(newLastPosition);
+    setLastPosColor(newLastcolor);
+  };
+
+
   const generateCircleData7 = (data) => {
     // console.log("data in 7", data);
 
@@ -297,32 +348,78 @@ const SelectedCircles = ({ route }) => {
 
       <NavReferral>{circlesName}</NavReferral>
 
-      <View
-        className="justify-center items-center w-[100%] mx-auto"
-        style={{ flex: 0.9 }}
-      >
-        <Text className="font-montmedium font-semibold text-[16px] leading-[28px] w-[90%] mx-auto text-bigText text-center">
-          {circlesName}
-        </Text>
+      <ScrollView style={{ flex: 1 }}>
+        {/* 5-Member Circle Completion Message */}
+        {circleData &&
+          is5MemberCircle(circleData) &&
+          getCircleStatus(circleData).status === "completed" && (
+            <View className="bg-[#FF9800] p-4 mx-4 mt-4 rounded-lg border-2 border-[#F57C00]">
+              <Text className="text-white font-montmedium font-bold text-[16px] text-center mb-3">
+                {getCircleStatus(circleData).message}
+              </Text>
+              <TouchableOpacity
+                className="bg-white py-2 px-4 rounded self-center"
+                onPress={() => navigation.navigate("Packages")}
+              >
+                <Text className="text-[#FF9800] font-montmedium font-bold text-[14px]">
+                  Upgrade Package
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
-        <CircleWithFourPieces
-          InnerData={innerData}
-          OuterData={outerData}
-          outterPices={outterPices}
-          innerPices={innerPices}
-          degree={degree}
-          centerLabel={lastPosition ? lastPosition.username : ""}
-          setOtherData={setOtherData}
-          setOpenData={setOpenData}
-          lastPosColor={lastPosColor}
-        />
+        {/* 5-Member Circle Progress */}
+        {circleData &&
+          is5MemberCircle(circleData) &&
+          getCircleStatus(circleData).status === "active" && (
+            <View className="bg-white p-4 mx-4 mt-4 rounded-lg shadow">
+              <Text className="font-montmedium font-semibold text-[16px] text-center mb-2 text-bigText">
+                Progress: {getCircleStatus(circleData).progress} positions filled
+              </Text>
+              <View className="h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
+                <View
+                  className="h-full bg-[#4CAF50] rounded-full"
+                  style={{
+                    width: `${
+                      (getCircleStatus(circleData).filledCount / 5) * 100
+                    }%`,
+                  }}
+                />
+              </View>
+              <Text className="text-center text-[14px] text-smallText">
+                {getCircleStatus(circleData).remaining} position(s) remaining
+              </Text>
+            </View>
+          )}
 
-        {circleCode && (
-          <Text className="font-montmedium font-semibold text-[14px] text-center leading-[28px] mb-5 text-smallText mt-1">
-            circle code: {circleCode || ""}
+        <View
+          className="justify-center items-center w-[100%] mx-auto"
+          style={{ minHeight: 400 }}
+        >
+          <Text className="font-montmedium font-semibold text-[16px] leading-[28px] w-[90%] mx-auto text-bigText text-center">
+            {circlesName}
           </Text>
-        )}
-      </View>
+
+          <CircleWithFourPieces
+            InnerData={innerData}
+            OuterData={outerData}
+            outterPices={outterPices}
+            innerPices={innerPices}
+            degree={degree}
+            centerLabel={lastPosition ? lastPosition.username : ""}
+            setOtherData={setOtherData}
+            setOpenData={setOpenData}
+            lastPosColor={lastPosColor}
+          />
+
+          {circleCode && (
+            <Text className="font-montmedium font-semibold text-[14px] text-center leading-[28px] mb-5 text-smallText mt-1">
+              circle code: {circleCode || ""}
+            </Text>
+          )}
+        </View>
+
+      </ScrollView>
 
       {OpenData && (
         <Modal transparent={true} animationType="fade">

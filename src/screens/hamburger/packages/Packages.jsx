@@ -116,7 +116,7 @@ const Packages = () => {
       />
       <NavBack>Packages</NavBack>
 
-      <View className="w-[95%] mx-auto mt-4">
+      <View className="flex-1 w-[95%] mx-auto mt-4">
         {/* <Text className="text-center font-montmedium mt-5">
           Unlock the benefits—purchase now!
         </Text> */}
@@ -176,7 +176,7 @@ const Packages = () => {
               </View>
             </TouchableOpacity>
           )}
-          contentContainerStyle={{}}
+          contentContainerStyle={{ paddingBottom: 20 }}
         />
       </View>
     </>

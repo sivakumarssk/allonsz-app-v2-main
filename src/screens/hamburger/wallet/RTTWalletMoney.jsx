@@ -24,11 +24,12 @@ import {
   getRemainingDays,
 } from "../../../utils/TimeConvert";
 
-const RTTWalletMoney = () => {
+const RTTWalletMoney = ({ route }) => {
   const navigation = useNavigation();
   const toast = useToast();
 
   const token = useSelector((state) => state.login.token);
+  const { withdrawableAmount } = route.params || {};
 
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -216,9 +217,16 @@ const RTTWalletMoney = () => {
       />
 
       <NavBack>Back</NavBack>
-      {/* <View
-        style={{ flex: 0.5, justifyContent: "center", alignItems: "center" }}
-      > */}
+      {withdrawableAmount && (
+        <View className="w-[88%] mx-auto my-3 bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <Text className="font-popmedium font-semibold text-[14px] leading-[20px] text-bigText mb-1">
+            Available Withdrawable Amount:
+          </Text>
+          <Text className="font-popmedium font-bold text-[18px] leading-[24px] text-[#4CAF50]">
+            ₹{parseFloat(withdrawableAmount || 0).toFixed(2)}
+          </Text>
+        </View>
+      )}
       <View className="w-[88%] mx-auto my-3">
         <Text className="font-popmedium font-normal text-[16px] leading-[24px] text-bigText mt-6">
           Amount

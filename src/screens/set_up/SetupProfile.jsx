@@ -28,6 +28,7 @@ import {
   GET_Mandals,
   GET_States,
   UPDATE_profile,
+  Get_UserByReferral,
 } from "../../Network/ApiCalling";
 
 import {
@@ -78,6 +79,9 @@ const SetupProfile = () => {
   const [loading, setLoading] = useState(false);
 
   const [ShowRefferal, setShowRefferal] = useState(false);
+  const [referralUserName, setReferralUserName] = useState("");
+  const [loadingReferral, setLoadingReferral] = useState(false);
+  const referralDebounceTimerRef = React.useRef(null);
 
   // console.log("from the Redux", token);
   // useEffect(() => {
@@ -508,6 +512,73 @@ const SetupProfile = () => {
       }
     });
   };
+
+  const fetchUserByReferral = async (referalCode) => {
+    if (!referalCode || referalCode.trim().length < 6) {
+      setReferralUserName("");
+      return;
+    }
+
+    try {
+      setLoadingReferral(true);
+      const res = await Get_UserByReferral(referalCode.trim(), token);
+      if (res.status === 200 && res.data?.user) {
+        const user = res.data.user;
+        const fullName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
+        setReferralUserName(fullName || "User found");
+      } else {
+        setReferralUserName("");
+      }
+    } catch (err) {
+      setReferralUserName("");
+      // Silently handle errors - don't show toast for invalid referral codes
+      if (err.response?.status !== 404) {
+        console.log("Error fetching user by referral:", err.response?.data);
+      }
+    } finally {
+      setLoadingReferral(false);
+    }
+  };
+
+  const handleReferralCodeChange = (value) => {
+    const emojiRegex =
+      /[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu;
+
+    const trimmedValue = value
+      .replace(emojiRegex, "")
+      .replace(/^[^A-Za-z]+/, "")
+      .replace(/[^A-Za-z0-9-]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/\s/g, "");
+
+    setFieldTouched("referal_code", true, true);
+    handleChange("referal_code")(trimmedValue);
+
+    // Clear previous timer
+    if (referralDebounceTimerRef.current) {
+      clearTimeout(referralDebounceTimerRef.current);
+    }
+
+    // Clear user name if input is too short
+    if (trimmedValue.length < 6) {
+      setReferralUserName("");
+      return;
+    }
+
+    // Set new timer for debounce (500ms delay)
+    referralDebounceTimerRef.current = setTimeout(() => {
+      fetchUserByReferral(trimmedValue);
+    }, 500);
+  };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (referralDebounceTimerRef.current) {
+        clearTimeout(referralDebounceTimerRef.current);
+      }
+    };
+  }, []);
 
   const {
     values,
@@ -940,31 +1011,8 @@ const SetupProfile = () => {
                 maxLength={13}
                 value={values.referal_code}
                 onBlur={handleBlur("referal_code")}
-                onChangeText={(value) => {
-                  const emojiRegex =
-                    /[\uD800-\uDBFF][\uDC00-\uDFFF]|\p{Emoji_Presentation}|\p{Extended_Pictographic}/gu;
-
-                  const trimmedValue = value
-                    .replace(emojiRegex, "")
-                    .replace(/^[^A-Za-z]+/, "")
-                    .replace(/[^A-Za-z0-9-]/g, "")
-                    .replace(/-+/g, "-")
-                    .replace(/\s/g, "");
-
-                  setFieldTouched("referal_code", true, true);
-                  handleChange("referal_code")(trimmedValue);
-
-                  // setShowRefferal(value.trim().length < 3);
-                }}
+                onChangeText={handleReferralCodeChange}
                 onFocus={() => {
-                  //   // Display a message when the field is focused
-
-                  //   if (
-                  //     !values.referal_code ||
-                  //     values.referal_code.trim() === ""
-                  //   ) {
-                  //     setShowRefferal(true);
-                  //   }
                   console.log("focused unique id");
                 }}
                 error={
@@ -973,6 +1021,31 @@ const SetupProfile = () => {
                     : null
                 }
               />
+              
+              {/* Show referral user name */}
+              {values.referal_code && values.referal_code.length >= 6 && (
+                <View className="mt-[-14px] mb-3">
+                  {loadingReferral ? (
+                    <Text className="font-montmedium text-[12px] text-smallText italic">
+                      Checking...
+                    </Text>
+                  ) : referralUserName ? (
+                    <View className="flex-row items-center">
+                      <Text className="font-montmedium text-[12px] text-[#4CAF50]">
+                        ✓ Upliner Name :{" "}
+                      </Text>
+                      <Text className="font-montmedium font-semibold text-[12px] text-[#4CAF50]">
+                        {referralUserName}
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text className="font-montmedium text-[12px] text-red-500">
+                      Referral code not found
+                    </Text>
+                  )}
+                </View>
+              )}
+
               {ShowRefferal && (
                 <Pressable
                   onPress={() => {
