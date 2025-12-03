@@ -2,7 +2,7 @@
   "expo": {
     "name": "Allons-Z",
     "slug": "allons-z",
-    "version": "1.1.4",
+    "version": "1.1.6",
     "newArchEnabled": false,
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -24,14 +24,18 @@
       }
     },
     "android": {
-      "versionCode": 2,
+      "versionCode": 28,
       "usesCleartextTraffic": true,
       "allowHttp": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.aits.allonsz"
+      "package": "com.aits.allonsz",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -42,7 +46,13 @@
         "expo-build-properties",
         {
           "android": {
-            "usesCleartextTraffic": true
+            "usesCleartextTraffic": true,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0",
+            "minSdkVersion": 24, 
+            "gradlePluginVersion": "8.5.1",
+            "ndkVersion": "r28" 
           },
           "ios": {
             "flipper": true
@@ -62,11 +72,11 @@
         }
       ]
     ],
+    "owner": "siva_kumar_123",
     "extra": {
       "eas": {
-        "projectId": "e7a90378-5c78-4002-8079-00c486602f32"
+        "projectId": "77b027e2-cfac-4341-807b-af6bdf791649"
       }
-    },
-    "owner": "aits"
+    }
   }
 }

@@ -1,7 +1,7 @@
 {
   "cli": {
     "version": ">= 13.4.2",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
     "development-simulator": {
@@ -41,7 +41,7 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true,
+      "autoIncrement": false,
       "ios": {
         "image": "macos-sequoia-15.3-xcode-16.2"
       }
