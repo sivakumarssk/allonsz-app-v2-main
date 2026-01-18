@@ -44,10 +44,10 @@ const EmailVerify = ({ route }) => {
   };
 
   useEffect(() => {
-    BackHandler.addEventListener("hardwareBackPress", onBackPress);
+    const backHandler = BackHandler.addEventListener("hardwareBackPress", onBackPress);
 
     return () => {
-      BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+      backHandler.remove();
     };
   }, []);
 
@@ -61,7 +61,6 @@ const EmailVerify = ({ route }) => {
         {
           text: "Go Back",
           onPress: () => {
-            BackHandler.removeEventListener("hardwareBackPress", onBackPress);
             navigation.goBack();
           }, // Navigate back
         },
@@ -98,8 +97,6 @@ const EmailVerify = ({ route }) => {
           token: res.data.token,
           FromStatus: status,
         });
-
-        BackHandler.removeEventListener("hardwareBackPress", onBackPress);
         // } else if (status === "Create_Account") {
         //   navigation.navigate("NewPassword", {
         //     token: res.data.token,

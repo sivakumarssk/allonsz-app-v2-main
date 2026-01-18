@@ -62,6 +62,8 @@ import PaymentDone from "./hamburger/wallet/PaymentDone";
 import TripWallet from "./hamburger/wallet/TripWallet";
 import RTTWalletMoney from "./hamburger/wallet/RTTWalletMoney";
 import RTTSucces from "./hamburger/wallet/RTTSucces";
+import ComboWallet from "./hamburger/wallet/ComboWallet";
+import ComboWalletWithdraw from "./hamburger/wallet/ComboWalletWithdraw";
 import PrivacyPolicy from "./hamburger/PrivacyPolicy";
 import TermsAndConditions from "./hamburger/TermsAndConditions";
 import DeleteAccountPolicy from "./hamburger/DeleteAccountPolicy";
@@ -72,6 +74,7 @@ import JoyPac from "./circles/JoyPac";
 
 import CircleScreen from "./circles/CircleScreen";
 import SelectedCircles from "./circles/SelectedCircles";
+import ComboCircles from "./circles/ComboCircles";
 import { NetworkProvider } from "../utils/NetworkContext";
 import CustomStatusBar from "./custom_screens/CustomStatusBar";
 import OthersCircles from "./circles/OthersCircles";
@@ -639,6 +642,14 @@ const ExploreAllonsz = () => {
                           }}
                         />
                         <Stack.Screen
+                          name="ComboCircles"
+                          component={ComboCircles}
+                          options={{
+                            headerShown: false,
+                            animation: "slide_from_right",
+                          }}
+                        />
+                        <Stack.Screen
                           name="OthersCircles"
                           component={OthersCircles}
                           options={{
@@ -681,6 +692,22 @@ const ExploreAllonsz = () => {
                         <Stack.Screen
                           name="RTTWalletMoney"
                           component={RTTWalletMoney}
+                          options={{
+                            headerShown: false,
+                            animation: "slide_from_right",
+                          }}
+                        />
+                        <Stack.Screen
+                          name="ComboWallet"
+                          component={ComboWallet}
+                          options={{
+                            headerShown: false,
+                            animation: "slide_from_right",
+                          }}
+                        />
+                        <Stack.Screen
+                          name="ComboWalletWithdraw"
+                          component={ComboWalletWithdraw}
                           options={{
                             headerShown: false,
                             animation: "slide_from_right",

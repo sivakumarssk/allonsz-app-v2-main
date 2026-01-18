@@ -42,7 +42,35 @@ const Wallet = () => {
             />
           </View>
         </TouchableOpacity>
-        {/*  */}
+        {/* Combo Wallet */}
+        <TouchableOpacity
+          className="flex flex-row justify-between items-center my-[14px] w-full"
+          onPress={() => {
+            navigation.navigate("ComboWallet");
+          }}
+        >
+          <View className="flex flex-row items-center">
+            <View className="mr-3">
+              <MaterialIcons name="wallet" size={24} color="#FF9800" />
+            </View>
+            <View>
+              <Text className="text-bigText font-montmedium font-semibold text-[16px] leading-[22px]">
+                Combo Wallet
+              </Text>
+              <Text className="text-smallText font-montmedium text-[12px] mt-1">
+                View combo package rewards
+              </Text>
+            </View>
+          </View>
+          <View className="mr-1">
+            <MaterialIcons
+              name="keyboard-arrow-right"
+              size={24}
+              color="black"
+            />
+          </View>
+        </TouchableOpacity>
+        {/* Trip Wallet */}
         <TouchableOpacity
           className="flex flex-row justify-between items-center my-[14px] w-full"
           onPress={() => {

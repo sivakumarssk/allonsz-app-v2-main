@@ -180,7 +180,7 @@ const TripWallet = ({ route }) => {
                       {formatCurrency(walletBreakdown?.withdrawable_amount)}
                     </Text>
                   </View>
-                  <View className="flex-row justify-between items-center">
+                  <View className="flex-row justify-between items-center mb-3">
                     <Text className="font-montmedium text-[16px] text-smallText">
                       Non-Withdrawable Amount:
                     </Text>
@@ -188,6 +188,16 @@ const TripWallet = ({ route }) => {
                       {formatCurrency(walletBreakdown?.non_withdrawable_amount)}
                     </Text>
                   </View>
+                  {walletBreakdown?.combo_wallet !== undefined && (
+                    <View className="flex-row justify-between items-center border-t border-gray-200 pt-3 mt-1">
+                      <Text className="font-montmedium text-[16px] text-smallText">
+                        Combo Wallet:
+                      </Text>
+                      <Text className="font-montmedium font-bold text-[16px] text-[#FF9800]">
+                        {formatCurrency(walletBreakdown?.combo_wallet)}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               </View>
 

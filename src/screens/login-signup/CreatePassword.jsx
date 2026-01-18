@@ -34,10 +34,10 @@ const CreatePassword = ({ route }) => {
     useCallback(() => {
       const onBackPress = () => true; // Prevent going back
 
-      BackHandler.addEventListener("hardwareBackPress", onBackPress);
+      const backHandler = BackHandler.addEventListener("hardwareBackPress", onBackPress);
 
       return () => {
-        BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+        backHandler.remove();
       };
     }, [])
   );

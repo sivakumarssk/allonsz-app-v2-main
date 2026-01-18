@@ -299,7 +299,7 @@ const HamburgerMenu = () => {
     },
     {
       componentIcon: (
-        <AntDesign name="customerservice" size={24} color="black" />
+        <AntDesign name="questioncircle" size={24} color="black" />
       ),
       // icons: require("../../styles/images/hamburgerMenu/support.png"),
       iconTitle: "Support",
@@ -314,7 +314,7 @@ const HamburgerMenu = () => {
       rightIcon: true,
     },
     {
-      componentIcon: <AntDesign name="copy1" size={24} color="black" />,
+      componentIcon: <AntDesign name="copy" size={24} color="black" />,
       // icons: require("../../styles/images/hamburgerMenu/support.png"),
       iconTitle: "Terms and Conditions",
       direction: "TermsAndConditions",
@@ -334,7 +334,7 @@ const HamburgerMenu = () => {
       rightIcon: true,
     },
     {
-      componentIcon: <AntDesign name="sharealt" size={24} color="black" />,
+      componentIcon: <MaterialIcons name="share" size={24} color="black" />,
       // icons: require("../../styles/images/hamburgerMenu/Share.png"),
       iconTitle: "Share Referral Code",
       rightIcon: false,

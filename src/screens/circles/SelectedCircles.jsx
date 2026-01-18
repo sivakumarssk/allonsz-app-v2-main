@@ -22,6 +22,7 @@ import { useToast } from "react-native-toast-notifications";
 import {
   is5MemberCircle,
   getCircleStatus,
+  isComboCircle,
 } from "../../utils/CircleHelpers";
 
 const SelectedCircles = ({ route }) => {
@@ -78,6 +79,12 @@ const SelectedCircles = ({ route }) => {
     try {
       setLoading(true);
 
+      // Log member details to check if colors are coming from backend
+      console.log("SelectedCircles - memberDetails:", memberDetails);
+      console.log("SelectedCircles - First member:", memberDetails[0]);
+      console.log("SelectedCircles - First member color:", memberDetails[0]?.color);
+      console.log("SelectedCircles - Circle data:", circleData);
+
       if (circle_Length === 21) {
         // outterPices = 16;
         // innerPices = 4;
@@ -108,8 +115,19 @@ const SelectedCircles = ({ route }) => {
         setDegree(180);
 
         generateCircleData7(memberDetails);
-      } else if (circle_Length === 5 && circleData && is5MemberCircle(circleData)) {
-        // Handle 5-member circle
+      } else if (
+        circle_Length === 5 &&
+        circleData &&
+        (is5MemberCircle(circleData) ||
+          (isComboCircle(circleData) &&
+            (circleData.section === "five_a" ||
+              circleData.section === "five_b" ||
+              circleData.combo_section === "5_member_1" ||
+              circleData.combo_section === "5_member_2" ||
+              circleData.combo_circle?.circle_type === "5_member_1" ||
+              circleData.combo_circle?.circle_type === "5_member_2")))
+      ) {
+        // Handle 5-member circle (both regular and combo)
         setOutterPices(4);
         setInnerPices(0);
         setDegree(180);
@@ -132,9 +150,15 @@ const SelectedCircles = ({ route }) => {
     let newLastPosition = null;
     let newLastcolor = null;
 
+    console.log("generateCircleData21 - Member data:", data);
+    console.log("generateCircleData21 - First member color:", data[0]?.color);
+
     data.forEach((member) => {
       const position = parseInt(member.position);
-      const colorCode = member.color;
+      // Use color from backend, fallback to default if not provided
+      const colorCode = member.color || "#44699c";
+      
+      console.log(`Position ${position} - Color from backend:`, member.color, "Using:", colorCode);
       // const user = member.user?.username ? member.user.username : " ";
       const user = member.user?.username
         ? member?.user?.username.length > 5
@@ -186,10 +210,15 @@ const SelectedCircles = ({ route }) => {
     let newLastPosition = null;
     let newLastcolor = null;
 
-    // console.log("data in 13", data);
+    console.log("generateCircleData13 - Member data:", data);
+    console.log("generateCircleData13 - First member color:", data[0]?.color);
+
     data.forEach((member) => {
       const position = parseInt(member.position);
-      const colorCode = member.color;
+      // Use color from backend, fallback to default if not provided
+      const colorCode = member.color || "#44699c";
+      
+      console.log(`Position ${position} - Color from backend:`, member.color, "Using:", colorCode);
       // const user = member.user?.username ? member.user.username : " ";
       const user = member.user?.username
         ? member?.user?.username.length > 10
@@ -235,9 +264,16 @@ const SelectedCircles = ({ route }) => {
     let newLastPosition = null;
     let newLastcolor = null;
 
+    console.log("generateCircleData5 - Member data:", data);
+    console.log("generateCircleData5 - First member color:", data[0]?.color);
+
     data.forEach((member) => {
       const position = parseInt(member.position);
+      // Check if color comes from backend, use it, otherwise use default
       const colorCode = member.color || "#44699c";
+      
+      console.log(`Position ${position} - Color from backend:`, member.color, "Using:", colorCode);
+      
       const user = member?.user?.username
         ? member?.user?.username.length > 8
           ? member?.user?.username.slice(0, 8).toLowerCase() + ".."
@@ -262,7 +298,8 @@ const SelectedCircles = ({ route }) => {
 
 
   const generateCircleData7 = (data) => {
-    // console.log("data in 7", data);
+    console.log("generateCircleData7 - Member data:", data);
+    console.log("generateCircleData7 - First member color:", data[0]?.color);
 
     const newOuterData = [];
     const newInnerData = [];
@@ -271,7 +308,10 @@ const SelectedCircles = ({ route }) => {
 
     data.forEach((member) => {
       const position = parseInt(member.position);
-      const colorCode = member.color;
+      // Use color from backend, fallback to default if not provided
+      const colorCode = member.color || "#44699c";
+      
+      console.log(`Position ${position} - Color from backend:`, member.color, "Using:", colorCode);
       // const user = member.user?.username
       //   ? member.user.username.slice(0, 12) + "..."
       //   : " ";

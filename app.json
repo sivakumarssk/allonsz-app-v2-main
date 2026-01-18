@@ -50,9 +50,9 @@
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
             "buildToolsVersion": "35.0.0",
-            "minSdkVersion": 24, 
+            "minSdkVersion": 24,
             "gradlePluginVersion": "8.5.1",
-            "ndkVersion": "r28" 
+            "ndkVersion": "r28"
           },
           "ios": {
             "flipper": true
@@ -70,7 +70,8 @@
         {
           "photosPermission": "The app accesses your photos to let you share them with your friends."
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "owner": "siva_kumar_123",
     "extra": {

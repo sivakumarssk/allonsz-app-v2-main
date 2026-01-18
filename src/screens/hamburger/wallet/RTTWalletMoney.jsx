@@ -15,6 +15,7 @@ import { useNavigation } from "@react-navigation/native";
 import {
   get_withdraw_history,
   Send_withdraw_request,
+  get_ProfileDetails,
 } from "../../../Network/ApiCalling";
 import { useSelector } from "react-redux";
 import Loader from "../../custom_screens/Loader";
@@ -35,14 +36,33 @@ const RTTWalletMoney = ({ route }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [requested_amount, setRequestedAmount] = useState("");
   const [History, setHistory] = useState([]);
+  const [comboWalletBalance, setComboWalletBalance] = useState(0);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
       handleWithdrawHistory(); // Call the function when screen comes into focus
+      fetchComboWalletBalance(); // Fetch combo wallet balance
     });
 
     return unsubscribe; // Cleanup listener on unmount
   }, [navigation, token]); // Add dependencies as needed
+
+  const fetchComboWalletBalance = async () => {
+    try {
+      const res = await get_ProfileDetails(token);
+      if (res.status === 200) {
+        const comboWallet =
+          parseFloat(
+            res.data.wallet_breakdown?.combo_wallet ||
+              res.data.user?.combo_wallet ||
+              0
+          ) || 0;
+        setComboWalletBalance(comboWallet);
+      }
+    } catch (err) {
+      console.log("Error fetching combo wallet balance:", err);
+    }
+  };
 
   const handleWithdrawHistory = async (isRefreshing = false) => {
     try {
@@ -227,6 +247,21 @@ const RTTWalletMoney = ({ route }) => {
           </Text>
         </View>
       )}
+
+      {/* Combo Wallet Note */}
+      {comboWalletBalance > 0 && (
+        <View className="w-[88%] mx-auto my-3 bg-orange-50 p-4 rounded-lg border border-orange-200">
+          <Text className="font-popmedium font-semibold text-[14px] leading-[20px] text-bigText mb-1">
+            Combo Wallet Balance:
+          </Text>
+          <Text className="font-popmedium font-bold text-[18px] leading-[24px] text-[#FF9800] mb-2">
+            ₹{parseFloat(comboWalletBalance || 0).toFixed(2)}
+          </Text>
+          <Text className="font-popmedium text-[12px] leading-[18px] text-smallText italic">
+            Note: The combo wallet amount is available to withdraw after 30 days.
+          </Text>
+        </View>
+      )}
       <View className="w-[88%] mx-auto my-3">
         <Text className="font-popmedium font-normal text-[16px] leading-[24px] text-bigText mt-6">
           Amount
@@ -288,7 +323,7 @@ const RTTWalletMoney = ({ route }) => {
             item.id?.toString() || index.toString()
           }
           renderItem={({ item, index }) => {
-            const { amount, transfer_details, status, created_at, rejection_reason } = item;
+            const { amount, transfer_details, status, created_at, rejection_reason, wallet_type } = item;
 
             // Helper function to capitalize first letter
             const capitalizeFirst = (str) => {
@@ -299,26 +334,39 @@ const RTTWalletMoney = ({ route }) => {
             // Normalize status to lowercase for comparison (API returns lowercase)
             const statusLower = status?.toLowerCase() || "";
             const displayStatus = capitalizeFirst(status);
+            
+            // Determine wallet type (null or undefined means regular wallet for backward compatibility)
+            const isComboWallet = wallet_type === "combo";
 
             return (
               <View
                 key={index}
                 className="bg-white p-4 mb-4 rounded-lg shadow-md"
               >
-                <Text className="text-base font-semibold text-gray-800 mb-4">
-                  Withdrawal requested at{" "}
-                  {new Intl.DateTimeFormat("en-GB", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  }).format(new Date(created_at))}{" "}
-                  at{" "}
-                  {new Date(created_at).toLocaleTimeString("en-US", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: true,
-                  })}
-                </Text>
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text className="text-base font-semibold text-gray-800">
+                    Withdrawal requested at{" "}
+                    {new Intl.DateTimeFormat("en-GB", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    }).format(new Date(created_at))}{" "}
+                    at{" "}
+                    {new Date(created_at).toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
+                  </Text>
+                  {/* Wallet Type Badge */}
+                  {isComboWallet && (
+                    <View className="bg-[#FF9800] px-2 py-1 rounded">
+                      <Text className="text-white text-[10px] font-montmedium font-semibold">
+                        COMBO
+                      </Text>
+                    </View>
+                  )}
+                </View>
 
                 <View className="flex-row mb-2">
                   <Text className="font-medium text-sm text-gray-600 w-1/2">

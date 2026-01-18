@@ -1,7 +1,7 @@
 import axios from "axios";
 
-const baseUrl = "https://admin.allons-z.com";
-
+// const baseUrl = "https://admin.allons-z.com";
+const baseUrl = "https://test.allons-z.com";
 // Login User
 export const valid_login = async (values) => {
   return await axios.post(`${baseUrl}/api/login`, values, {
@@ -625,6 +625,45 @@ export const Get_UserByReferral = async (referalCode, token) => {
   formData.append("referal_code", referalCode);
 
   return await axios.post(`${baseUrl}/api/get-user-by-referral`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+//Get combo wallet transaction history
+export const Get_ComboWalletTransactions = async (token) => {
+  return await axios.get(`${baseUrl}/api/combo-wallet-transactions`, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+//Send combo wallet withdrawal request
+export const Send_ComboWalletWithdrawRequest = async (amount, token) => {
+  const formData = new FormData();
+  formData.append("amount", amount);
+
+  return await axios.post(`${baseUrl}/api/combo-wallet-withdraw-request`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
+//Get combo circles
+export const Get_ComboCircles = async (token, packageId = null) => {
+  const formData = new FormData();
+  if (packageId) {
+    formData.append("package_id", packageId);
+  }
+  formData.append("key", "values");
+
+  return await axios.post(`${baseUrl}/api/combo-circles`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
       Authorization: `Bearer ${token}`,

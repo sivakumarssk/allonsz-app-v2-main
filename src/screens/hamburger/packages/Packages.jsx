@@ -32,7 +32,12 @@ const Packages = () => {
         const res = await Get_Packages(token);
         if (res.status === 200) {
           const result = res.data.packages;
-          // console.log("result", result);
+          // Debug logging to verify combo packages are received
+          console.log("All packages:", result);
+          console.log("Total packages:", result?.length);
+          const comboPackages = result?.filter((p) => p.is_combo == 1 || p.is_combo === true);
+          console.log("Combo packages count:", comboPackages?.length);
+          console.log("Combo packages:", comboPackages);
           setPackDetails(result);
         }
       } catch (err) {
@@ -105,6 +110,19 @@ const Packages = () => {
     getPackages();
   }, []);
 
+  // Debug logging to verify packages in state
+  useEffect(() => {
+    if (packDetails) {
+      console.log("Packages in state:", packDetails);
+      console.log("Total packages in state:", packDetails.length);
+      const comboInState = packDetails.filter(
+        (p) => p.is_combo == 1 || p.is_combo === true
+      );
+      console.log("Combo packages in state:", comboInState.length);
+      console.log("Combo packages details:", comboInState);
+    }
+  }, [packDetails]);
+
   return (
     <>
       <Loader visible={loading} />
@@ -124,25 +142,42 @@ const Packages = () => {
           scrollEnabled={true}
           showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
-          data={packDetails}
-          keyExtractor={(item, index) => index.toString()}
+          data={packDetails || []}
+          keyExtractor={(item, index) => item?.id?.toString() || index.toString()}
           renderItem={({ item, index }) => (
             <TouchableOpacity
               className={`flex flex-row justify-between items-center px-2 py-5 w-full rounded ${
                 index % 2 !== 0 ? "bg-[#cccccc26]" : "bg-[#acacac2f]"
               }`}
               onPress={() => {
+                // Allow selection of all packages including combo
+                const packagePrice = item.price || item.total || 0;
+                console.log("Selected package:", {
+                  id: item.id,
+                  name: item.name,
+                  is_combo: item.is_combo,
+                  price: packagePrice,
+                });
                 navigation.navigate("CreateRazorpay", {
                   packageId: item.id,
-                  packagePrice: item.price,
+                  packagePrice: packagePrice,
                 });
               }}
             >
               <View className="flex flex-row items-center">
                 <View>
-                  <Text className="text-bigText font-montmedium font-semibold text-[16px] leading-[22px]">
-                    {item.name}
-                  </Text>
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-bigText font-montmedium font-semibold text-[16px] leading-[22px]">
+                      {item.name}
+                    </Text>
+                    {(item.is_combo == 1 || item.is_combo === true) && (
+                      <View className="bg-[#FF9800] px-2 py-1 rounded">
+                        <Text className="text-white text-[10px] font-montmedium font-semibold">
+                          COMBO
+                        </Text>
+                      </View>
+                    )}
+                  </View>
 
                   <View className="flex-row justify-center gap-1">
                     <Text className="text-[12px]">
@@ -165,7 +200,7 @@ const Packages = () => {
                     color="white"
                   />
                   <Text className="text-[16px] font-montmedium font-semibold text-white ml-[2px]">
-                    {item.price}
+                    {item.price || item.total || 0}
                   </Text>
                 </View>
                 {/* <MaterialIcons

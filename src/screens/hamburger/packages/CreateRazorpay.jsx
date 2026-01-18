@@ -15,6 +15,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useToast } from "react-native-toast-notifications";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import Constants from "expo-constants";
 
 const CreateRazorpay = ({ route }) => {
   const { packageId, packagePrice } = route.params || {};
@@ -59,7 +60,13 @@ const CreateRazorpay = ({ route }) => {
 
   const isWalletBalanceSufficient = () => {
     if (paymentType !== "wallet") return true;
-    // Use total_amount (withdrawable + non-withdrawable) for purchase validation
+    
+    // IMPORTANT: Combo packages cannot be purchased with combo wallet
+    // They can only be purchased with regular wallet or Razorpay
+    // Regular wallet includes both withdrawable and non-withdrawable amounts
+    // Combo wallet is separate and only for withdrawals
+    
+    // Use total_amount from wallet_breakdown (regular wallet only)
     const totalBalance = parseFloat(walletBreakdown?.total_amount || walletBalance || 0);
     const price = parseFloat(packagePrice || 0);
     return totalBalance >= price;
@@ -77,9 +84,58 @@ const CreateRazorpay = ({ route }) => {
     return `Insufficient wallet balance. Required: ${formatCurrency(packagePrice)}, Available: ${formatCurrency(walletBreakdown.total_amount)} (Withdrawable: ${formatCurrency(walletBreakdown.withdrawable_amount)}, Non-withdrawable: ${formatCurrency(walletBreakdown.non_withdrawable_amount)})`;
   };
 
+  // Check if running in Expo Go
+  const isExpoGo = () => {
+    try {
+      // Expo Go runs with executionEnvironment as "storeClient"
+      return Constants.executionEnvironment === "storeClient" || 
+             Constants.appOwnership === "expo" ||
+             (typeof __DEV__ !== 'undefined' && __DEV__ && Constants.executionEnvironment !== "standalone");
+    } catch (error) {
+      // If Constants is not available, assume it's Expo Go
+      return true;
+    }
+  };
+
+  // Generate dummy payment data for Expo Go
+  const generateDummyPaymentData = (orderId) => {
+    return {
+      razorpay_order_id: orderId,
+      razorpay_payment_id: `pay_dummy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      razorpay_signature: `dummy_signature_${Date.now()}_${Math.random().toString(36).substr(2, 16)}`,
+    };
+  };
+
   const handlePayment = async (option) => {
     console.log("handlePayment", option);
 
+    // Check if running in Expo Go - bypass Razorpay SDK
+    if (isExpoGo()) {
+      console.log("Running in Expo Go - Using dummy payment data");
+      
+      // Show toast notification about dummy transaction
+      toast.hideAll();
+      toast.show("Using dummy transaction (Expo Go - Razorpay not available)", {
+        type: "info",
+        placement: "top",
+        duration: 3000,
+        offset: 30,
+        animationType: "slide-in",
+      });
+      
+      // Generate dummy payment data
+      const dummyData = generateDummyPaymentData(option.order_id);
+      console.log("Dummy payment data:", dummyData);
+      
+      // Small delay to simulate payment processing
+      setTimeout(async () => {
+        // Verify the dummy transaction
+        await handleVerifyRazorpayOrder(dummyData);
+      }, 1000);
+      return;
+    }
+
+    // Original Razorpay flow for standalone builds
     const options = {
       description: option.description,
       order_id: option.order_id,
@@ -100,18 +156,51 @@ const CreateRazorpay = ({ route }) => {
 
     setTimeout(async () => {
       try {
+        // Check if RazorpayCheckout is available (might not be in Expo Go)
+        if (!RazorpayCheckout || typeof RazorpayCheckout.open !== 'function') {
+          throw new Error("Razorpay SDK not available");
+        }
+        
         const data = await RazorpayCheckout.open(options);
         handleVerifyRazorpayOrder(data);
       } catch (error) {
         console.log("Error in Razorpay:", error);
-        toast.hideAll();
-        toast.show("Payment canceled. Let us know if you need help!", {
-          type: "warning",
-          placement: "top",
-          duration: 4000,
-          offset: 30,
-          animationType: "slide-in",
-        });
+        
+        // If Razorpay SDK is not available, fall back to dummy transaction
+        if (error.message === "Razorpay SDK not available" || 
+            error.toString().includes("Native module") ||
+            error.toString().includes("not found")) {
+          console.log("Razorpay SDK not available - Using dummy transaction");
+          
+          toast.hideAll();
+          toast.show("Razorpay SDK not available - Using dummy transaction", {
+            type: "info",
+            placement: "top",
+            duration: 3000,
+            offset: 30,
+            animationType: "slide-in",
+          });
+          
+          // Generate dummy payment data
+          const dummyData = generateDummyPaymentData(options.order_id);
+          console.log("Dummy payment data:", dummyData);
+          
+          // Verify the dummy transaction
+          setTimeout(async () => {
+            await handleVerifyRazorpayOrder(dummyData);
+          }, 500);
+        } else {
+          // User canceled or other error
+          toast.hideAll();
+          toast.show("Payment canceled. Let us know if you need help!", {
+            type: "warning",
+            placement: "top",
+            duration: 4000,
+            offset: 30,
+            animationType: "slide-in",
+          });
+          setLoading(false);
+        }
       }
     }, 1000);
   };

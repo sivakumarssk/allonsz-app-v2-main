@@ -71,6 +71,10 @@ const ProfileDetails = () => {
       if (res.status === 200) {
         // console.log("resData ||", res.data.user.pincode);
         const result = res.data.user;
+        // If combo_wallet is in wallet_breakdown, merge it into user object for consistency
+        if (res.data.wallet_breakdown?.combo_wallet !== undefined) {
+          result.combo_wallet = res.data.wallet_breakdown.combo_wallet;
+        }
         setUserDetails(result);
 
         const Bank_Details = JSON.parse(result.bank_details);
@@ -431,6 +435,34 @@ const ProfileDetails = () => {
               readOnly={true}
               value={UserDetails?.referal_code || ""}
             />
+          </View>
+
+          {/* Combo Wallet Section */}
+          <View>
+            <Text className="text-bigText mt-6 mb-2 font-semibold text-[28px] leading-[34px] tracking-widest">
+              Combo Wallet
+            </Text>
+          </View>
+          <View className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+            <PrimaryInput
+              label={"Combo Wallet Balance"}
+              readOnly={true}
+              value={`₹${parseFloat(UserDetails?.combo_wallet || 0).toFixed(2)}`}
+            />
+            <View className="mt-2 mb-2">
+              <Text className="text-smallText font-montmedium text-[12px] leading-[18px]">
+                Eligibility Status:{" "}
+                {UserDetails?.combo_wallet_eligible_for_withdrawal ? (
+                  <Text className="text-[#4CAF50] font-semibold">
+                    ✓ Eligible for withdrawal (4+ direct downlines)
+                  </Text>
+                ) : (
+                  <Text className="text-[#FF9800] font-semibold">
+                    ⚠ Not eligible for withdrawal (Need 4 direct downlines)
+                  </Text>
+                )}
+              </Text>
+            </View>
           </View>
 
           <View>
