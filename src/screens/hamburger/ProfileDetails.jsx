@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {
   Alert,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -569,6 +571,10 @@ const ProfileDetails = () => {
           backgroundColor="#44689C"
           // translucent
         />
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
         <TouchableWithoutFeedback
           onPress={() => {
             // setmodalVisible(false);
@@ -675,6 +681,7 @@ const ProfileDetails = () => {
             </TouchableWithoutFeedback>
           </View>
         </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );

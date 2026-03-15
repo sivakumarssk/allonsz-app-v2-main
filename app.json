@@ -24,7 +24,7 @@
       }
     },
     "android": {
-      "versionCode": 28,
+      "versionCode": 31,
       "usesCleartextTraffic": true,
       "allowHttp": true,
       "adaptiveIcon": {
@@ -32,6 +32,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.aits.allonsz",
+      "softwareKeyboardLayoutMode": "pan",
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
@@ -50,9 +51,7 @@
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
             "buildToolsVersion": "35.0.0",
-            "minSdkVersion": 24,
-            "gradlePluginVersion": "8.5.1",
-            "ndkVersion": "r28"
+            "minSdkVersion": 24
           },
           "ios": {
             "flipper": true
@@ -73,10 +72,10 @@
       ],
       "expo-asset"
     ],
-    "owner": "siva_kumar_123",
+    "owner": "sowsitechnologies",
     "extra": {
       "eas": {
-        "projectId": "77b027e2-cfac-4341-807b-af6bdf791649"
+        "projectId": "79c2efce-6663-4998-b1c4-3b49d3eccf7a"
       }
     }
   }

@@ -299,7 +299,8 @@ const HamburgerMenu = () => {
     },
     {
       componentIcon: (
-        <AntDesign name="questioncircle" size={24} color="black" />
+        // <AntDesign name="questioncircle" size={24} color="black" />
+        <MaterialIcons name="support" size={24} color="black" />
       ),
       // icons: require("../../styles/images/hamburgerMenu/support.png"),
       iconTitle: "Support",

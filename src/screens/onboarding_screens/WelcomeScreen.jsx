@@ -1,11 +1,11 @@
 import React from "react";
-import { Image, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import PrimaryButton from "../custom_screens/PrimaryButton";
 import { useNavigation } from "@react-navigation/native";
 import CustomStatusBar from "../custom_screens/CustomStatusBar";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { insert } from "formik";
 import { RFValue } from "react-native-responsive-fontsize";
 
 const WelcomeScreen = () => {
@@ -20,8 +20,8 @@ const WelcomeScreen = () => {
         translucent
       />
 
-      <SafeAreaView style={{ flex: 1 }}>
-        <View style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "white" }} edges={["top"]}>
+        <View style={{ flex: 1, backgroundColor: "white" }}>
           <View
             className="rounded-bl-[120px] overflow-hidden w-[100%]"
             style={[{ flex: 0.65 }]}

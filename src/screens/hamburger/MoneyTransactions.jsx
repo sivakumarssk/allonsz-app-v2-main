@@ -237,18 +237,21 @@ const MoneyTransactions = () => {
                     </View>
                   </View>
 
-                  <View className="flex flex-row justify-between items-center">
-                    <View>
-                      <Text className="font-normal font-montmedium text-[12px]">
-                        Product:
-                      </Text>
+                  {!isDebit && null}
+                  {isDebit && (
+                    <View className="flex flex-row justify-between items-center">
+                      <View>
+                        <Text className="font-normal font-montmedium text-[12px]">
+                          Product:
+                        </Text>
+                      </View>
+                      <View>
+                        <Text className="text-gray-700 font-semibold font-montmedium text-[12px]">
+                          {item.reason}
+                        </Text>
+                      </View>
                     </View>
-                    <View>
-                      <Text className="text-gray-700 font-semibold font-montmedium text-[12px]">
-                        {item.reason}
-                      </Text>
-                    </View>
-                  </View>
+                  )}
 
                   <View className="flex flex-row justify-between items-center">
                     <View>

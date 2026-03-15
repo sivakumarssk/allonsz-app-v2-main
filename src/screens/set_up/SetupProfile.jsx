@@ -9,6 +9,7 @@ import {
   Modal,
   TouchableWithoutFeedback,
   Alert,
+  KeyboardAvoidingView,
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -408,7 +409,7 @@ const SetupProfile = () => {
   };
 
   const onSubmit = async (values) => {
-    // console.log(">>>", values);
+    console.log(">>>", values);
     // console.log("in the UPDATE_PROFILE API");
     try {
       setLoading(true);
@@ -627,6 +628,10 @@ const SetupProfile = () => {
       />
 
       <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
         <View
           className={`w-[90%] mx-auto flex justify-between mb-[25px] ${
             Platform.OS === "android" ? "mt-[25px]" : "mt-[80px]"
@@ -636,7 +641,7 @@ const SetupProfile = () => {
             Setup My Profile
           </Text>
         </View>
-        <ScrollView showsVerticalScrollIndicator={false} scrollEnabled={true}>
+        <ScrollView showsVerticalScrollIndicator={false} scrollEnabled={true} keyboardShouldPersistTaps="handled">
           <View className="w-[90%] mx-auto">
             <Pressable onPress={() => setModalVisible(true)}>
               <View
@@ -1128,6 +1133,7 @@ const SetupProfile = () => {
             <BackToLogin />
           </View>
         </ScrollView>
+        </KeyboardAvoidingView>
         {/* <View className="flex flex-row justify-center items-center w-[90%] mx-auto">
         <Pressable onPress={handleLogout}>
           <Text className="text-[#44689C] text-[12px] pb-[2px] font-montmedium">

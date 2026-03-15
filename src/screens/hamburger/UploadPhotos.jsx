@@ -3,13 +3,13 @@ import {
   Alert,
   FlatList,
   Modal,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useSelector } from "react-redux";
 import { useFormik } from "formik";
@@ -252,7 +252,7 @@ const UploadPhotos = () => {
       <NavBack>Upload Photos</NavBack>
 
       {/* <MultipleImage /> */}
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <View className="w-[95%] mx-auto" style={{ flex: 1 }}>
           <Text className="font-montmedium font-semibold leading-[22px] text-[16px] tracking-wider text-smallText my-2">
             My trips

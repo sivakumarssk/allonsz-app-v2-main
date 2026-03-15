@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import {
   Alert,
   FlatList,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Get_AllCircles, Get_AllPastCircles } from "../../Network/ApiCalling";
 import { useSelector } from "react-redux";
 import { useNavigation } from "@react-navigation/native";
@@ -132,7 +132,7 @@ const PastCircles = () => {
 
       <NavReferral>Previous Circles</NavReferral>
 
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }} edges={["top", "bottom"]}>
         <View className="w-[95%] mx-auto" style={{ flex: 1 }}>
           {circles.length === 0 ? (
             <View
@@ -163,7 +163,7 @@ const PastCircles = () => {
                       memberDetails: item.members || [],
                       circlesName: item.package?.name || item.name || "Completed Circle",
                       packageId: item.package_id || item.package?.id,
-                      circleCode: item.name,
+                      circleCode: isComboCircle(item) ? (item.circle_code || item.name) : item.name,
                       circle: item, // Pass full circle object for proper rendering
                     });
                   }}
@@ -186,14 +186,17 @@ const PastCircles = () => {
                     </View>
                     <View className="mt-2">
                       <Text className="text-bigText font-montmedium font-semibold text-[12px] leading-[22px]">
-                        Circle Code: {item.name}
+                        Circle Code: {isComboCircle(item) ? (item.circle_code || item.name) : item.name}
                       </Text>
                       {/* Show section and cycle for combo circles */}
                       {item.section && (
                         <Text className="text-bigText font-montmedium text-[11px] leading-[18px] text-gray-600 mt-1">
-                          {item.section === "five_a" ? "5-Member 1" : 
-                           item.section === "five_b" ? "5-Member 2" : 
-                           item.section === "twentyone" ? "21-Member" : item.section}
+                          {/* Use section_name from API if available, otherwise use default */}
+                          {item.section_name || 
+                           (item.section === "five_a" ? "5-Member Circle 1" : 
+                            item.section === "five_b" ? "5-Member Circle 2" : 
+                            item.section === "five_c" ? "5-Member Circle 3" : 
+                            item.section === "twentyone" ? "21-Member Circle" : item.section)}
                           {item.cycle && ` - Cycle ${item.cycle}`}
                         </Text>
                       )}

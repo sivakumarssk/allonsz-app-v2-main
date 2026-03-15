@@ -5,6 +5,9 @@ import {
   TextInput,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import CustomStatusBar from "../../custom_screens/CustomStatusBar";
 import NavBack from "../../custom_screens/NavBack";
@@ -25,6 +28,8 @@ const ComboWalletWithdraw = ({ route }) => {
   const {
     comboWallet,
     availableBalance,
+    lockedForAutorenew,
+    pendingWithdrawals,
     eligibleForWithdrawal,
   } = route.params || {};
   const [loading, setLoading] = useState(false);
@@ -36,7 +41,7 @@ const ComboWalletWithdraw = ({ route }) => {
 
   const validateAmount = () => {
     const amountValue = parseFloat(amount || 0);
-    // Use available balance (total - pending withdrawals) for validation
+    // Use available balance from backend (already accounts for locked + pending)
     const availableBal = parseFloat(availableBalance || comboWallet || 0);
 
     if (!amount || amountValue <= 0) {
@@ -199,6 +204,11 @@ const ComboWalletWithdraw = ({ route }) => {
 
       <NavBack>Combo Wallet Withdrawal</NavBack>
 
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+      <ScrollView keyboardShouldPersistTaps="handled">
       {/* Available Balance Display */}
       {comboWallet && (
         <View className="w-[88%] mx-auto my-3 bg-orange-50 p-4 rounded-lg border border-orange-200">
@@ -208,6 +218,29 @@ const ComboWalletWithdraw = ({ route }) => {
           <Text className="font-popmedium font-bold text-[18px] leading-[24px] text-[#FF9800]">
             {formatCurrency(comboWallet)}
           </Text>
+          
+          {parseFloat(lockedForAutorenew || 0) > 0 && (
+            <>
+              <Text className="font-popmedium font-semibold text-[14px] leading-[20px] text-bigText mt-2 mb-1">
+                Locked for Auto-renewal:
+              </Text>
+              <Text className="font-popmedium font-bold text-[18px] leading-[24px] text-[#FF6B00]">
+                {formatCurrency(lockedForAutorenew)}
+              </Text>
+            </>
+          )}
+          
+          {parseFloat(pendingWithdrawals || 0) > 0 && (
+            <>
+              <Text className="font-popmedium font-semibold text-[14px] leading-[20px] text-bigText mt-2 mb-1">
+                Pending Withdrawals:
+              </Text>
+              <Text className="font-popmedium font-bold text-[18px] leading-[24px] text-[#FFA500]">
+                {formatCurrency(pendingWithdrawals)}
+              </Text>
+            </>
+          )}
+          
           <Text className="font-popmedium font-semibold text-[14px] leading-[20px] text-bigText mt-2 mb-1">
             Available Balance:
           </Text>
@@ -265,7 +298,7 @@ const ComboWalletWithdraw = ({ route }) => {
             • Withdrawal requests are processed within 30 working days{"\n"}
             • You must have 4 direct referrals with combo packages to withdraw{"\n"}
             • Combo wallet can only be withdrawn, not used for purchases{"\n"}
-            • Available balance = Total - Pending withdrawals
+            • Available balance = Total - Locked for auto-renewal - Pending withdrawals
           </Text>
         </View>
       </View>
@@ -283,6 +316,8 @@ const ComboWalletWithdraw = ({ route }) => {
           Submit Withdrawal Request
         </PrimaryButton>
       </View>
+      </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 };

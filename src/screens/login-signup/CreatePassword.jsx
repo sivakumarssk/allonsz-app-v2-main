@@ -102,8 +102,7 @@ const CreatePassword = ({ route }) => {
             if (status === 400) {
               console.log("Error With 400.");
             } else if (status === 422) {
-              // console.log("422 error");
-              a;
+              console.log("422 error");
             } else if (status === 301) {
               console.log("301 error");
             } else if (status === 401) {

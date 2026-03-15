@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from "react-native";
 import CustomStatusBar from "../../custom_screens/CustomStatusBar";
 import NavBack from "../../custom_screens/NavBack";
 import PrimaryButton from "../../custom_screens/PrimaryButton";
@@ -17,6 +17,10 @@ const RechargeWallet = () => {
 
       <NavBack>Recharge the wallet</NavBack>
 
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
       <View className="w-[88%] mx-auto my-3">
         <Text className="font-popmedium font-normal text-[16px] leading-[24px] text-bigText mt-9">
           Amount
@@ -44,6 +48,7 @@ const RechargeWallet = () => {
           Confirm Payment
         </PrimaryButton>
       </View>
+      </KeyboardAvoidingView>
     </>
   );
 };

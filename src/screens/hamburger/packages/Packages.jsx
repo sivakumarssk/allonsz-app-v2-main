@@ -38,7 +38,18 @@ const Packages = () => {
           const comboPackages = result?.filter((p) => p.is_combo == 1 || p.is_combo === true);
           console.log("Combo packages count:", comboPackages?.length);
           console.log("Combo packages:", comboPackages);
-          setPackDetails(result);
+          
+          // Sort packages: combo packages first, then other packages
+          const sortedPackages = [...result].sort((a, b) => {
+            const aIsCombo = a.is_combo == 1 || a.is_combo === true;
+            const bIsCombo = b.is_combo == 1 || b.is_combo === true;
+            
+            if (aIsCombo && !bIsCombo) return -1; // a comes first
+            if (!aIsCombo && bIsCombo) return 1;  // b comes first
+            return 0; // maintain original order for same type
+          });
+          
+          setPackDetails(sortedPackages);
         }
       } catch (err) {
         // console.log("error", err.response.data);
@@ -179,14 +190,14 @@ const Packages = () => {
                     )}
                   </View>
 
-                  <View className="flex-row justify-center gap-1">
+                  {/* <View className="flex-row justify-center gap-1">
                     <Text className="text-[12px]">
                       max_downlines:{item.max_downlines}
                     </Text>
                     <Text className="text-[12px]">
                       total_members:{item.total_members}
                     </Text>
-                  </View>
+                  </View> */}
                 </View>
               </View>
               <View className="mr-1 flex-col items-center bg-[#44699c] w-[28%] rounded">

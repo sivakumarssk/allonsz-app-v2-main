@@ -34,7 +34,8 @@ const ComboWallet = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [comboWallet, setComboWallet] = useState("0.00");
   const [availableBalance, setAvailableBalance] = useState("0.00");
-  const [pendingWithdrawals, setPendingWithdrawals] = useState(0);
+  const [lockedForAutorenew, setLockedForAutorenew] = useState("0.00");
+  const [pendingWithdrawals, setPendingWithdrawals] = useState("0.00");
   const [eligibleForWithdrawal, setEligibleForWithdrawal] = useState(false);
   const [transactions, setTransactions] = useState([]);
 
@@ -54,42 +55,36 @@ const ComboWallet = () => {
 
       // Fetch profile to get combo wallet balance
       const profileRes = await get_ProfileDetails(token);
-      let comboWalletBalance = "0.00";
       if (profileRes.status === 200) {
-        // Get combo wallet from wallet_breakdown or user object
-        comboWalletBalance = parseFloat(
-          profileRes.data.wallet_breakdown?.combo_wallet ||
-            profileRes.data.user?.combo_wallet ||
-            0
+        const walletBreakdown = profileRes.data.wallet_breakdown || {};
+        
+        // Use new backend fields if available, otherwise fallback to old structure
+        const comboWalletBalance = parseFloat(
+          walletBreakdown.combo_wallet ||
+          profileRes.data.user?.combo_wallet ||
+          0
         ).toFixed(2);
+        
+        const comboWithdrawable = parseFloat(
+          walletBreakdown.combo_withdrawable ||
+          comboWalletBalance
+        ).toFixed(2);
+        
+        const comboLocked = parseFloat(
+          walletBreakdown.combo_locked_for_autorenew || 0
+        ).toFixed(2);
+        
+        const comboPending = parseFloat(
+          walletBreakdown.combo_pending_withdrawals || 0
+        ).toFixed(2);
+        
         setComboWallet(comboWalletBalance);
+        setAvailableBalance(comboWithdrawable);
+        setLockedForAutorenew(comboLocked);
+        setPendingWithdrawals(comboPending);
         setEligibleForWithdrawal(
           profileRes.data.user?.combo_wallet_eligible_for_withdrawal || false
         );
-      }
-
-      // Fetch withdrawal history to calculate pending withdrawals
-      const withdrawHistoryRes = await get_withdraw_history(token);
-      if (withdrawHistoryRes.status === 200) {
-        const withdrawals = withdrawHistoryRes.data.withdraws || [];
-        // Calculate pending combo wallet withdrawals
-        const pendingComboWithdrawals = withdrawals
-          .filter(
-            (w) =>
-              w.wallet_type === "combo" &&
-              w.status?.toLowerCase() === "pending"
-          )
-          .reduce((sum, w) => sum + parseFloat(w.amount || 0), 0);
-        setPendingWithdrawals(pendingComboWithdrawals);
-
-        // Calculate available balance (total - pending)
-        const totalComboWallet = parseFloat(comboWalletBalance || 0);
-        const available = Math.max(0, totalComboWallet - pendingComboWithdrawals);
-        setAvailableBalance(available.toFixed(2));
-      } else {
-        // If withdrawal history fails, set available balance to combo wallet balance
-        setAvailableBalance(comboWalletBalance);
-        setPendingWithdrawals(0);
       }
 
       // Fetch combo wallet transactions
@@ -210,7 +205,12 @@ const ComboWallet = () => {
                 <Text className="text-[#fff] font-medium font-montmedium text-[14px] leading-[20px]">
                   Available: {formatCurrency(availableBalance)}
                 </Text>
-                {pendingWithdrawals > 0 && (
+                {parseFloat(lockedForAutorenew) > 0 && (
+                  <Text className="text-[#fff] font-medium font-montmedium text-[12px] leading-[18px] mt-1 opacity-80">
+                    Locked for Auto-renewal: {formatCurrency(lockedForAutorenew)}
+                  </Text>
+                )}
+                {parseFloat(pendingWithdrawals) > 0 && (
                   <Text className="text-[#fff] font-medium font-montmedium text-[12px] leading-[18px] mt-1 opacity-80">
                     Pending: {formatCurrency(pendingWithdrawals)}
                   </Text>
@@ -244,6 +244,11 @@ const ComboWallet = () => {
             Combo wallet rewards are earned from combo package circles. These
             funds can only be withdrawn and cannot be used for package purchases
             or upgrades. Withdrawal eligibility requires 4+ direct downlines.
+            {parseFloat(lockedForAutorenew) > 0 && (
+              <Text className="font-montmedium font-semibold text-[13px] leading-[18px] text-orange-700 mt-2 block">
+                {"\n"}Note: ₹{formatCurrency(lockedForAutorenew)} is locked for auto-renewal of combo circles.
+              </Text>
+            )}
           </Text>
         </View>
 
@@ -255,6 +260,8 @@ const ComboWallet = () => {
                 navigation.navigate("ComboWalletWithdraw", {
                   comboWallet: comboWallet,
                   availableBalance: availableBalance,
+                  lockedForAutorenew: lockedForAutorenew,
+                  pendingWithdrawals: pendingWithdrawals,
                   eligibleForWithdrawal: eligibleForWithdrawal,
                 });
               } else {

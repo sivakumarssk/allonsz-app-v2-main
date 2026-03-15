@@ -32,6 +32,7 @@ const SelectedCircles = ({ route }) => {
     circleCode,
     packageId,
     circle: circleData,
+    allComboCircles, // All combo circles from same package (for building color array)
   } = route.params;
   // console.log("memberDetails>>>", memberDetails);
 
@@ -75,6 +76,195 @@ const SelectedCircles = ({ route }) => {
   const Q3_colorcode = "#0FBF00";
   const Q4_colorcode = "#0994CF";
 
+  /**
+   * Calculate the global color position for a combo circle member
+   * 
+   * @param section - The circle section: 'five_a' | 'five_b' | 'five_c' | 'twentyone'
+   * @param memberPosition - The local member position (1-5 or 1-21)
+   * @returns The global color position (1-36)
+   */
+  const getColorPositionForComboCircle = (section, memberPosition) => {
+    if (!section) {
+      // Not a combo circle, return position as-is
+      return memberPosition;
+    }
+
+    switch (section) {
+      case 'five_a':
+        // five_a: positions 1-5 → color positions 1-5
+        return memberPosition;
+        
+      case 'five_b':
+        // five_b: positions 1-5 → color positions 6-10 (add 5)
+        return memberPosition + 5;
+        
+      case 'five_c':
+        // five_c: positions 1-5 → color positions 11-15 (add 10)
+        return memberPosition + 10;
+        
+      case 'twentyone':
+        // twentyone: positions 1-21 → color positions 16-36 (add 15)
+        return memberPosition + 15;
+        
+      default:
+        return memberPosition;
+    }
+  };
+
+  /**
+   * Get color for a combo circle member
+   * For combo circles, calculates color based on global color position using package colors array
+   * For regular circles, uses member.color from backend
+   */
+  /**
+   * Build full 36-color array from all combo circles in the same package
+   * NOTE: Backend now provides correct colors based on global positions, so this function
+   * is mainly for fallback scenarios.
+   * 
+   * Color positions:
+   * - five_a: positions 1-5 → global 1-5
+   * - five_b: positions 1-5 → global 6-10
+   * - five_c: positions 1-5 → global 11-15
+   * - twentyone: positions 1-21 → global 16-36
+   */
+  const buildPackageColorArray = (allComboCircles, packageId) => {
+    if (!allComboCircles || !Array.isArray(allComboCircles) || !packageId) {
+      return null;
+    }
+    
+    // Filter circles for the same package
+    const packageCircles = allComboCircles.filter(c => c.package_id === packageId);
+    if (packageCircles.length === 0) {
+      return null;
+    }
+    
+    // Build color array (36 positions: 1-36)
+    const colorArray = new Array(36).fill(null);
+    
+    // Find all combo circles
+    const twentyoneCircle = packageCircles.find(c => {
+      const section = c.section || c.combo_section || null;
+      return section === 'twentyone' || section === '21_member';
+    });
+    
+    const fiveACircle = packageCircles.find(c => {
+      const section = c.section || c.combo_section || null;
+      return section === 'five_a' || section === '5_member_1';
+    });
+    
+    const fiveBCircle = packageCircles.find(c => {
+      const section = c.section || c.combo_section || null;
+      return section === 'five_b' || section === '5_member_2';
+    });
+    
+    const fiveCCircle = packageCircles.find(c => {
+      const section = c.section || c.combo_section || null;
+      return section === 'five_c' || section === '5_member_3';
+    });
+    
+    // Step 1: Fill positions 1-5 from five_a circle
+    if (fiveACircle && fiveACircle.members) {
+      fiveACircle.members.forEach((member) => {
+        const localPos = parseInt(member.position);
+        if (localPos >= 1 && localPos <= 5 && member.color) {
+          const globalPos = localPos; // five_a: local = global for 1-5
+          const colorIndex = globalPos - 1;
+          if (colorIndex >= 0 && colorIndex < 5) {
+            colorArray[colorIndex] = member.color;
+          }
+        }
+      });
+    }
+
+    // Step 2: Fill positions 6-10 from five_b circle
+    if (fiveBCircle && fiveBCircle.members) {
+      fiveBCircle.members.forEach((member) => {
+        const localPos = parseInt(member.position);
+        if (localPos >= 1 && localPos <= 5 && member.color) {
+          const globalPos = localPos + 5; // five_b: local + 5 = global (6-10)
+          const colorIndex = globalPos - 1; // 0-based: 5-9
+          if (colorIndex >= 5 && colorIndex < 10) {
+            colorArray[colorIndex] = member.color;
+          }
+        }
+      });
+    }
+    
+    // Step 3: Fill positions 11-15 from five_c circle
+    if (fiveCCircle && fiveCCircle.members) {
+      fiveCCircle.members.forEach((member) => {
+        const localPos = parseInt(member.position);
+        if (localPos >= 1 && localPos <= 5 && member.color) {
+          const globalPos = localPos + 10; // five_c: local + 10 = global (11-15)
+          const colorIndex = globalPos - 1; // 0-based: 10-14
+          if (colorIndex >= 10 && colorIndex < 15) {
+            colorArray[colorIndex] = member.color;
+          }
+        }
+      });
+    }
+    
+    // Step 4: Fill positions 16-36 from twentyone circle
+    if (twentyoneCircle && twentyoneCircle.members) {
+      twentyoneCircle.members.forEach((member) => {
+        const localPos = parseInt(member.position);
+        if (localPos >= 1 && localPos <= 21 && member.color) {
+          const globalPos = localPos + 15; // twentyone: local + 15 = global (16-36)
+          const colorIndex = globalPos - 1; // 0-based: 15-35
+          if (colorIndex >= 15 && colorIndex < 36) {
+            colorArray[colorIndex] = member.color;
+          }
+        }
+      });
+    }
+    
+    // Check if we have enough colors
+    const filledCount = colorArray.filter(c => c !== null).length;
+    
+    if (filledCount >= 21) { // At least some colors filled
+      console.log(`[Color Array] Built ${filledCount}/36 colors from ${packageCircles.length} combo circles`);
+      console.log(`[Color Array] Positions 1-5: ${colorArray.slice(0, 5).map((c, i) => `${i+1}=${c || 'null'}`).join(', ')}`);
+      console.log(`[Color Array] Positions 6-10: ${colorArray.slice(5, 10).map((c, i) => `${i+6}=${c || 'null'}`).join(', ')}`);
+      console.log(`[Color Array] Positions 11-15: ${colorArray.slice(10, 15).map((c, i) => `${i+11}=${c || 'null'}`).join(', ')}`);
+      console.log(`[Color Array] Positions 16-20: ${colorArray.slice(15, 20).map((c, i) => `${i+16}=${c || 'null'}`).join(', ')}`);
+      return colorArray;
+    }
+    
+    return null;
+  };
+
+  /**
+   * Get color for a circle member
+   * BACKEND IS NOW FIXED - it provides correct colors based on global positions
+   * So we can use member.color directly for all circles (including combo circles)
+   */
+  const getMemberColor = (member, circleSection, packageColors = null, allMembers = null, builtColorArray = null) => {
+    // Backend is now fixed - it provides correct colors based on global positions
+    // So we can use member.color directly for all circles (including combo circles)
+    
+    if (member.color) {
+      if (circleSection) {
+        // Log for combo circles (for debugging) - backend now sends correct colors!
+        const globalColorPosition = getColorPositionForComboCircle(circleSection, parseInt(member.position));
+        console.log(`[Combo Circle] ✅ Using backend color (BACKEND FIXED). Section: ${circleSection}, Local: ${member.position} → Global: ${globalColorPosition} → Color: ${member.color}`);
+      }
+      return member.color;
+    }
+    
+    // Fallback: Try package colors array if member.color is missing (now supports 36 positions)
+    if (circleSection && packageColors && Array.isArray(packageColors) && packageColors.length >= 36) {
+      const globalColorPosition = getColorPositionForComboCircle(circleSection, parseInt(member.position));
+      const colorIndex = globalColorPosition - 1;
+      
+      if (colorIndex >= 0 && colorIndex < packageColors.length && packageColors[colorIndex]) {
+        return packageColors[colorIndex];
+      }
+    }
+    
+    // Last fallback: default color
+    return "#44699c";
+  };
+
   useEffect(() => {
     try {
       setLoading(true);
@@ -85,6 +275,33 @@ const SelectedCircles = ({ route }) => {
       console.log("SelectedCircles - First member color:", memberDetails[0]?.color);
       console.log("SelectedCircles - Circle data:", circleData);
 
+      // Get circle section if it's a combo circle
+      const circleSection = circleData?.section || circleData?.combo_section || circleData?.combo_circle?.circle_type || null;
+      
+      // Normalize section name (convert '5_member_1' to 'five_a', etc.)
+      let normalizedSection = circleSection;
+      if (circleSection === '5_member_1') normalizedSection = 'five_a';
+      else if (circleSection === '5_member_2') normalizedSection = 'five_b';
+      else if (circleSection === '21_member') normalizedSection = 'twentyone';
+      
+      // Get package colors array (for combo packages, should have 36 colors)
+      // Try multiple possible locations for colors array
+      const packageColors = 
+        circleData?.package?.colors || 
+        circleData?.package?.color_positions || 
+        circleData?.colors || 
+        null;
+      
+      // Log package structure to debug
+      console.log("SelectedCircles - Circle data package:", circleData?.package);
+      console.log("SelectedCircles - Package colors found:", packageColors ? `${packageColors.length} colors` : "NOT FOUND");
+      console.log("SelectedCircles - Normalized section:", normalizedSection);
+      
+      // Backend is now fixed - it provides correct colors based on global positions (1-36)
+      // So we don't need to build a color array workaround anymore
+      // We can use member.color directly from the backend
+      const builtColorArray = null; // Not needed anymore - backend is fixed
+      
       if (circle_Length === 21) {
         // outterPices = 16;
         // innerPices = 4;
@@ -94,7 +311,8 @@ const SelectedCircles = ({ route }) => {
         setInnerPices(4);
         setDegree(180);
 
-        generateCircleData21(memberDetails);
+        // Pass circle section, package colors, all members, and built color array for combo circles
+        generateCircleData21(memberDetails, normalizedSection, packageColors, memberDetails, builtColorArray);
       } else if (circle_Length === 13) {
         // outterPices = 9;
         // innerPices = 3;
@@ -122,16 +340,20 @@ const SelectedCircles = ({ route }) => {
           (isComboCircle(circleData) &&
             (circleData.section === "five_a" ||
               circleData.section === "five_b" ||
+              circleData.section === "five_c" ||
               circleData.combo_section === "5_member_1" ||
               circleData.combo_section === "5_member_2" ||
+              circleData.combo_section === "5_member_3" ||
               circleData.combo_circle?.circle_type === "5_member_1" ||
-              circleData.combo_circle?.circle_type === "5_member_2")))
+              circleData.combo_circle?.circle_type === "5_member_2" ||
+              circleData.combo_circle?.circle_type === "5_member_3")))
       ) {
         // Handle 5-member circle (both regular and combo)
         setOutterPices(4);
         setInnerPices(0);
         setDegree(180);
-        generateCircleData5(memberDetails);
+        // Pass circle section, package colors, all members, and built color array for combo circles
+        generateCircleData5(memberDetails, normalizedSection, packageColors, memberDetails, builtColorArray);
       } else {
         setOutterPices(16);
         setInnerPices(4);
@@ -144,7 +366,7 @@ const SelectedCircles = ({ route }) => {
     }
   }, []);
 
-  const generateCircleData21 = (data) => {
+  const generateCircleData21 = (data, circleSection = null, packageColors = null, allMembers = null, builtColorArray = null) => {
     const newOuterData = [];
     const newInnerData = [];
     let newLastPosition = null;
@@ -152,13 +374,21 @@ const SelectedCircles = ({ route }) => {
 
     console.log("generateCircleData21 - Member data:", data);
     console.log("generateCircleData21 - First member color:", data[0]?.color);
+    console.log("generateCircleData21 - Circle section:", circleSection);
+    console.log("generateCircleData21 - Package colors available:", packageColors ? `${packageColors.length} colors` : "None");
 
     data.forEach((member) => {
       const position = parseInt(member.position);
-      // Use color from backend, fallback to default if not provided
-      const colorCode = member.color || "#44699c";
+      // Get color - use helper function for combo circles to ensure correct mapping
+      const colorCode = getMemberColor(member, circleSection, packageColors, allMembers, builtColorArray);
       
-      console.log(`Position ${position} - Color from backend:`, member.color, "Using:", colorCode);
+      // Log color position calculation for combo circles
+      if (circleSection) {
+        const globalColorPosition = getColorPositionForComboCircle(circleSection, position);
+        console.log(`Local position ${position} (section: ${circleSection}) → Global color position ${globalColorPosition}, Color: ${colorCode}`);
+      } else {
+        console.log(`Position ${position} - Color from backend:`, member.color, "Using:", colorCode);
+      }
       // const user = member.user?.username ? member.user.username : " ";
       const user = member.user?.username
         ? member?.user?.username.length > 5
@@ -259,20 +489,28 @@ const SelectedCircles = ({ route }) => {
     setLastPosColor(newLastcolor);
   };
 
-  const generateCircleData5 = (data) => {
+  const generateCircleData5 = (data, circleSection = null, packageColors = null, allMembers = null, builtColorArray = null) => {
     const newOuterData = [];
     let newLastPosition = null;
     let newLastcolor = null;
 
     console.log("generateCircleData5 - Member data:", data);
     console.log("generateCircleData5 - First member color:", data[0]?.color);
+    console.log("generateCircleData5 - Circle section:", circleSection);
+    console.log("generateCircleData5 - Package colors available:", packageColors ? `${packageColors.length} colors` : "None");
 
     data.forEach((member) => {
       const position = parseInt(member.position);
-      // Check if color comes from backend, use it, otherwise use default
-      const colorCode = member.color || "#44699c";
+      // Get color - use helper function for combo circles to ensure correct mapping
+      const colorCode = getMemberColor(member, circleSection, packageColors, allMembers, builtColorArray);
       
-      console.log(`Position ${position} - Color from backend:`, member.color, "Using:", colorCode);
+      // Log color position calculation for combo circles
+      if (circleSection) {
+        const globalColorPosition = getColorPositionForComboCircle(circleSection, position);
+        console.log(`Local position ${position} (section: ${circleSection}) → Global color position ${globalColorPosition}, Color: ${colorCode}`);
+      } else {
+        console.log(`Position ${position} - Color from backend:`, member.color, "Using:", colorCode);
+      }
       
       const user = member?.user?.username
         ? member?.user?.username.length > 8

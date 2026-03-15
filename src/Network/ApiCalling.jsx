@@ -1,7 +1,9 @@
 import axios from "axios";
+import { Platform } from "react-native";
 
-// const baseUrl = "https://admin.allons-z.com";
-const baseUrl = "https://test.allons-z.com";
+const baseUrl = "https://admin.allons-z.com";
+// const baseUrl = "https://test.allons-z.com";
+// const baseUrl = "http://192.168.0.121:8000";
 // Login User
 export const valid_login = async (values) => {
   return await axios.post(`${baseUrl}/api/login`, values, {
@@ -147,12 +149,17 @@ export const GET_Mandals = async (id, token) => {
 export const UPDATE_profile = async (values, token) => {
   const formData = new FormData();
 
-  if (values.photo) {
+  // Only append photo if it exists and has a valid uri
+  if (values.photo && values.photo.uri) {
     const { uri, fileName, mimeType } = values.photo;
+    // On Android, ensure uri starts with file:// for proper FormData streaming
+    const photoUri = Platform.OS === "android" && !uri.startsWith("file://") && !uri.startsWith("content://")
+      ? `file://${uri}`
+      : uri;
     formData.append("photo", {
-      uri,
-      name: fileName,
-      type: mimeType,
+      uri: photoUri,
+      name: fileName || `photo_${Date.now()}.jpg`,
+      type: mimeType || "image/jpeg",
     });
   }
   formData.append("first_name", values.first_name);
@@ -181,12 +188,15 @@ export const UPDATE_profile = async (values, token) => {
 export const UPDATE_profilePic = async (image, token) => {
   const formData = new FormData();
 
-  if (image) {
+  if (image && image.uri) {
     const { uri, fileName, mimeType } = image;
+    const photoUri = Platform.OS === "android" && !uri.startsWith("file://") && !uri.startsWith("content://")
+      ? `file://${uri}`
+      : uri;
     formData.append("photo", {
-      uri,
-      name: fileName,
-      type: mimeType,
+      uri: photoUri,
+      name: fileName || `photo_${Date.now()}.jpg`,
+      type: mimeType || "image/jpeg",
     });
   }
 
@@ -547,11 +557,13 @@ export const Upload_Trip_Pic = async (tripID, images, token) => {
   formData.append("trip_id", tripID);
 
   images.forEach((image, index) => {
-    // console.log("fg", image.uri, "Gg");
+    const imgUri = Platform.OS === "android" && !image.uri.startsWith("file://") && !image.uri.startsWith("content://")
+      ? `file://${image.uri}`
+      : image.uri;
     formData.append("photos[]", {
-      uri: image.uri,
-      type: image.mimeType,
-      name: image.fileName,
+      uri: imgUri,
+      type: image.mimeType || "image/jpeg",
+      name: image.fileName || `photo_${index}_${Date.now()}.jpg`,
     });
   });
 

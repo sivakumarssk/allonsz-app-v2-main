@@ -6,7 +6,6 @@ import {
   Linking,
   Modal,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,6 +13,7 @@ import {
   View,
   Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
   Get_Ads,
@@ -495,7 +495,7 @@ Looking forward to your response.
         backgroundColor="transparent"
         translucent
       />
-      <SafeAreaView edges={["right", "left"]} style={{ flex: 1 }}>
+      <SafeAreaView edges={["top", "bottom", "left", "right"]} style={{ flex: 1 }}>
         <View style={{ flex: 0.4 }}>
           <Image
             source={{ uri: TripDetails[0]?.photo }}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { useFormik } from "formik";
 import { useDispatch, useSelector } from "react-redux";
@@ -33,73 +33,78 @@ const BankDetails = () => {
 
     try {
       setLoading(true);
-      const res = await verify_BANKDETAILS(values, token);
-      // console.log("msg>??>>", res.data);
+      setTimeout(() => {
+        navigation.navigate("SetUpSucces", {
+          previousScreen: "BankVerificationScreen",
+        });
+      }, 500);
+      // const res = await verify_BANKDETAILS(values, token);
+      // // console.log("msg>??>>", res.data);
 
-      const responseData = res.data;
+      // const responseData = res.data;
 
-      if (res.status === 200) {
-        const status = responseData.data.status;
-        console.log("status", status);
-        //for Invaild Account Number and Both are invaild
-        if (res && res.data) {
-          // console.log("res.data1", responseData.data.status);
-          if (responseData?.data?.status && responseData?.data?.status === 0) {
-            // console.log("data1", responseData?.data.msg);
+      // if (res.status === 200) {
+      //   const status = responseData.data.status;
+      //   console.log("status", status);
+      //   //for Invaild Account Number and Both are invaild
+      //   if (res && res.data) {
+      //     // console.log("res.data1", responseData.data.status);
+      //     if (responseData?.data?.status && responseData?.data?.status === 0) {
+      //       // console.log("data1", responseData?.data.msg);
 
-            if (responseData?.data?.msg) {
-              toast.hideAll();
-              toast.show(responseData?.data?.msg, {
-                type: "danger",
-                placement: "top",
-                duration: 4000,
-                offset: 30,
-                animationType: "slide-in",
-              });
-            } else if (responseData.data?.msg?.status) {
-              toast.hideAll();
-              toast.show(responseData.data?.msg?.status, {
-                type: "danger",
-                placement: "top",
-                duration: 4000,
-                offset: 30,
-                animationType: "slide-in",
-              });
-            }
-            //for Invaild IFSC code and both correct
-          } else if (
-            responseData?.data?.result?.status &&
-            responseData.data.result.status === 0
-          ) {
-            // console.log("data2");
-            toast.hideAll();
-            toast.show(responseData?.data?.msg.status, {
-              type: "danger",
-              placement: "top",
-              duration: 4000,
-              offset: 30,
-              animationType: "slide-in",
-            });
-          } else {
-            // console.log("else part");
-            setTimeout(() => {
-              navigation.navigate("SetUpSucces", {
-                previousScreen: "BankVerificationScreen",
-              });
-            }, 500);
-          }
-        } else {
-          // console.error("Unexpected response structure:", res);
-          toast.hideAll();
-          toast.show("Oops! Something went wrong—please try again", {
-            type: "warning",
-            placement: "top",
-            duration: 4000,
-            offset: 30,
-            animationType: "slide-in",
-          });
-        }
-      }
+      //       if (responseData?.data?.msg) {
+      //         toast.hideAll();
+      //         toast.show(responseData?.data?.msg, {
+      //           type: "danger",
+      //           placement: "top",
+      //           duration: 4000,
+      //           offset: 30,
+      //           animationType: "slide-in",
+      //         });
+      //       } else if (responseData.data?.msg?.status) {
+      //         toast.hideAll();
+      //         toast.show(responseData.data?.msg?.status, {
+      //           type: "danger",
+      //           placement: "top",
+      //           duration: 4000,
+      //           offset: 30,
+      //           animationType: "slide-in",
+      //         });
+      //       }
+      //       //for Invaild IFSC code and both correct
+      //     } else if (
+      //       responseData?.data?.result?.status &&
+      //       responseData.data.result.status === 0
+      //     ) {
+      //       // console.log("data2");
+      //       toast.hideAll();
+      //       toast.show(responseData?.data?.msg.status, {
+      //         type: "danger",
+      //         placement: "top",
+      //         duration: 4000,
+      //         offset: 30,
+      //         animationType: "slide-in",
+      //       });
+      //     } else {
+      //       // console.log("else part");
+      //       setTimeout(() => {
+      //         navigation.navigate("SetUpSucces", {
+      //           previousScreen: "BankVerificationScreen",
+      //         });
+      //       }, 500);
+      //     }
+      //   } else {
+      //     // console.error("Unexpected response structure:", res);
+      //     toast.hideAll();
+      //     toast.show("Oops! Something went wrong—please try again", {
+      //       type: "warning",
+      //       placement: "top",
+      //       duration: 4000,
+      //       offset: 30,
+      //       animationType: "slide-in",
+      //     });
+      //   }
+      // }
     } catch (err) {
       // console.log("Error in the Email Register", err);
       if (err) {
@@ -223,12 +228,16 @@ const BankDetails = () => {
       />
 
       <SafeAreaView style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
         <View className="w-[90%] mx-auto justify-center mt-[60px] mb-[40px]">
           <Text className="font-montmedium font-bold text-[34px] leading-[34px] tracking-wider text-bigText w-[70%] pt-1">
             Bank details
           </Text>
         </View>
-        <ScrollView>
+        <ScrollView keyboardShouldPersistTaps="handled">
           <View className="w-[90%] mx-auto">
             {/* <PrimaryInput
               label={"Bank Name"}
@@ -339,6 +348,7 @@ const BankDetails = () => {
             <BackToLogin />
           </View>
         </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </>
   );

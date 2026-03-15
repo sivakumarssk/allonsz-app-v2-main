@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -12,13 +12,10 @@ import { useNavigation } from "@react-navigation/native";
 import {
   formatComboCircleName,
 } from "../../utils/CircleHelpers";
-import SelectedCircles from "./SelectedCircles";
 
 const ComboCircles = ({ route }) => {
   const navigation = useNavigation();
   const { comboCircles, packageId, packageName } = route.params || {};
-
-  const [selectedCircle, setSelectedCircle] = useState(null);
 
   // comboCircles can be either an array or an object with sections
   // Handle both cases
@@ -29,27 +26,20 @@ const ComboCircles = ({ route }) => {
     : [];
 
   const handleCircleSelect = (circle) => {
-    setSelectedCircle(circle);
+    // For combo circles, use formatComboCircleName to show section-specific name
+    // (e.g., "5-Member Circle 1" or custom section_name) instead of package name
+    const displayName = formatComboCircleName(circle);
+    
+    // Navigate to SelectedCircles as a separate screen
+    navigation.navigate("SelectedCircles", {
+      memberDetails: circle.members,
+      circlesName: displayName,
+      packageId: circle.package_id,
+      circleCode: circle.circle_code || circle.name,
+      circle: circle,
+      allComboCircles: allComboCircles, // Pass all combo circles to build color array
+    });
   };
-
-  // If a circle is selected, show SelectedCircles component
-  if (selectedCircle) {
-    return (
-      <SelectedCircles
-        route={{
-          params: {
-            memberDetails: selectedCircle.members,
-            circlesName:
-              selectedCircle.package?.name ||
-              formatComboCircleName(selectedCircle),
-            packageId: selectedCircle.package_id,
-            circleCode: selectedCircle.name,
-            circle: selectedCircle,
-          },
-        }}
-      />
-    );
-  }
 
   return (
     <>
@@ -102,7 +92,7 @@ const ComboCircles = ({ route }) => {
                         {circleDisplayName}
                       </Text>
                       <Text className="text-smallText font-montmedium text-[12px] mt-1">
-                        Circle Code: {circle.name}
+                        Circle Code: {circle.circle_code || circle.name}
                       </Text>
                       {circle.cycle && (
                         <Text className="text-smallText font-montmedium text-[11px] mt-1">

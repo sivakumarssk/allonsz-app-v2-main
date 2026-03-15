@@ -16,6 +16,7 @@ import CircleWithFourPieces from "./CircleWithFourPieces";
 import NavBack from "../custom_screens/NavBack";
 import { useToast } from "react-native-toast-notifications";
 import { useNavigation } from "@react-navigation/native";
+import { isComboCircle } from "../../utils/CircleHelpers";
 
 const OthersCircles = ({ route }) => {
   const { package_id, downline_id } = route.params;
@@ -391,7 +392,7 @@ const OthersCircles = ({ route }) => {
         />
 
         <Text className="font-montmedium font-semibold text-[14px] text-center leading-[28px] mb-5 text-smallText mt-1">
-          circle code: {Circle?.name}
+          circle code: {Circle && isComboCircle(Circle) ? (Circle.circle_code || Circle.name) : Circle?.name}
         </Text>
       </View>
 

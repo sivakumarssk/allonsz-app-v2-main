@@ -78,10 +78,10 @@ const CircleScreen = () => {
           setComboCirclesByPackage(comboByPackage);
         }
 
-        // Create display list: regular circles + one entry per combo package
-        const displayList = [...regularCircles];
+        // Create display list: combo packages first, then regular circles
+        const displayList = [];
         
-        // Add combo packages (one entry per package, representing all circles)
+        // Add combo packages first (one entry per package, representing all circles)
         Object.keys(comboByPackage).forEach((packageId) => {
           const packageCircles = comboByPackage[packageId];
           if (packageCircles.length > 0) {
@@ -94,6 +94,9 @@ const CircleScreen = () => {
             displayList.push(representativeCircle);
           }
         });
+        
+        // Add regular circles after combo packages
+        displayList.push(...regularCircles);
 
         setCircles(displayList);
         setRegularCircles(regularCircles);
@@ -190,11 +193,11 @@ const CircleScreen = () => {
               : item.package?.name || item.name;
 
             return (
-              <TouchableOpacity
-                className={`flex flex-row justify-between items-center px-2 py-5 w-full rounded ${
-                  index % 2 !== 0 ? "bg-[#cccccc26]" : "bg-[#acacac2f]"
-                }`}
-                onPress={() => {
+            <TouchableOpacity
+              className={`flex flex-row justify-between items-center px-2 py-5 w-full rounded ${
+                index % 2 !== 0 ? "bg-[#cccccc26]" : "bg-[#acacac2f]"
+              }`}
+              onPress={() => {
                   // Navigate to ComboCircles for combo packages, SelectedCircles for regular
                   if (item.isComboPackage && item.allComboCircles) {
                     // This is a combo package - show all circles for this package
@@ -214,27 +217,28 @@ const CircleScreen = () => {
                     });
                   } else {
                     // Regular circle
-                    navigation.navigate("SelectedCircles", {
-                      memberDetails: item.members,
+                navigation.navigate("SelectedCircles", {
+                  memberDetails: item.members,
                       circlesName: item.package?.name || displayName,
                       packageId: item.package?.id,
-                      circleCode: item.name,
-                      circle: item, // Pass full circle object for 5-member circle logic
-                    });
+                  circleCode: isComboCircle(item) ? (item.circle_code || item.name) : item.name,
+                  circle: item, // Pass full circle object for 5-member circle logic
+                  allComboCircles: isComboCircle(item) ? comboCirclesByPackage[item.package_id] || [] : null, // Pass all combo circles if it's a combo
+                });
                   }
-                }}
-              >
-                <View className="flex flex-row items-center w-[73%]">
-                  <View className="">
+              }}
+            >
+              <View className="flex flex-row items-center w-[73%]">
+                <View className="">
                     {/* Show package name prominently */}
-                    <Text className="text-bigText font-montmedium font-semibold text-[17px] leading-[22px]">
+                  <Text className="text-bigText font-montmedium font-semibold text-[17px] leading-[22px]">
                       {item.package?.name || displayName}
                     </Text>
                     
                     {/* Show circle code/name below package name */}
                     <Text className="text-smallText font-montmedium text-[12px] mt-1">
-                      Circle: {item.name}
-                    </Text>
+                      Circle: {isComboCircle(item) ? (item.circle_code || item.name) : item.name}
+                  </Text>
 
                     {isComboCircle(item) && (
                       <Text className="text-[11px] text-[#FF9800] font-montmedium mt-1">
@@ -242,24 +246,24 @@ const CircleScreen = () => {
                       </Text>
                     )}
 
-                    <View className="flex-row justify-center gap-1 mt-1">
-                      <Text className="text-[13px]">
+                    {/* <View className="flex-row justify-center gap-1 mt-1">
+                    <Text className="text-[13px]">
                         max_downlines:
                         {item.package?.max_downlines || "N/A"}
-                      </Text>
-                      <Text className="text-[13px]">
+                    </Text>
+                    <Text className="text-[13px]">
                         total_members:
                         {item.package?.total_members || "N/A"}
-                      </Text>
-                    </View>
-                  </View>
+                    </Text>
+                  </View> */}
                 </View>
-                <View className="mr-1 py-[5px] flex-col items-center bg-[#44699c] w-[90px] rounded">
-                  <View>
-                    <Text className="text-white">View Circle</Text>
-                  </View>
+              </View>
+              <View className="mr-1 py-[5px] flex-col items-center bg-[#44699c] w-[90px] rounded">
+                <View>
+                  <Text className="text-white">View Circle</Text>
                 </View>
-              </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
             );
           }}
           contentContainerStyle={{ paddingBottom: 20 }}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import CustomStatusBar from "../../custom_screens/CustomStatusBar";
 import NavBack from "../../custom_screens/NavBack";
 import PrimaryButton from "../../custom_screens/PrimaryButton";
@@ -15,20 +15,21 @@ import { useNavigation } from "@react-navigation/native";
 import { useToast } from "react-native-toast-notifications";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import Constants from "expo-constants";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const CreateRazorpay = ({ route }) => {
   const { packageId, packagePrice } = route.params || {};
   // console.log("packageId", packageId);
 
   const toast = useToast();
-
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
 
   const [loading, setLoading] = useState(false);
   const [paymentType, setPaymentType] = useState("razorpay"); // "wallet" or "razorpay"
   const [walletBalance, setWalletBalance] = useState(null);
   const [walletBreakdown, setWalletBreakdown] = useState(null);
+  const [comboWalletBalance, setComboWalletBalance] = useState(null);
   const [loadingWallet, setLoadingWallet] = useState(false);
 
   const token = useSelector((state) => state.login.token);
@@ -42,9 +43,39 @@ const CreateRazorpay = ({ route }) => {
       setLoadingWallet(true);
       const res = await get_ProfileDetails(token);
       if (res.status === 200) {
-        // Use total_amount from wallet_breakdown (includes both withdrawable and non-withdrawable)
-        const totalAmount = res.data.wallet_breakdown?.total_amount || res.data.user?.wallet || "0.00";
-        setWalletBalance(totalAmount);
+        // Get combo wallet balance first
+        const comboWallet = parseFloat(
+          res.data.wallet_breakdown?.combo_wallet ||
+          res.data.user?.combo_wallet ||
+          0
+        );
+        setComboWalletBalance(comboWallet);
+        
+        // Calculate regular wallet balance (exclude combo wallet)
+        // If total_amount includes combo wallet, subtract it
+        let totalAmount = parseFloat(
+          res.data.wallet_breakdown?.total_amount || 
+          res.data.user?.wallet || 
+          0
+        );
+        
+        // Explicitly exclude combo wallet from regular wallet balance
+        // If the backend includes combo in total_amount, subtract it
+        const regularWalletBalance = Math.max(0, totalAmount - comboWallet);
+        
+        // Also check if withdrawable_amount + non_withdrawable_amount gives us regular wallet
+        if (res.data.wallet_breakdown) {
+          const withdrawable = parseFloat(res.data.wallet_breakdown.withdrawable_amount || 0);
+          const nonWithdrawable = parseFloat(res.data.wallet_breakdown.non_withdrawable_amount || 0);
+          const calculatedRegular = withdrawable + nonWithdrawable;
+          
+          // Use the calculated regular wallet if available, otherwise use total minus combo
+          totalAmount = calculatedRegular > 0 ? calculatedRegular : regularWalletBalance;
+        } else {
+          totalAmount = regularWalletBalance;
+        }
+        
+        setWalletBalance(totalAmount.toFixed(2));
         setWalletBreakdown(res.data.wallet_breakdown);
       }
     } catch (err) {
@@ -61,20 +92,40 @@ const CreateRazorpay = ({ route }) => {
   const isWalletBalanceSufficient = () => {
     if (paymentType !== "wallet") return true;
     
-    // IMPORTANT: Combo packages cannot be purchased with combo wallet
-    // They can only be purchased with regular wallet or Razorpay
-    // Regular wallet includes both withdrawable and non-withdrawable amounts
-    // Combo wallet is separate and only for withdrawals
+    // IMPORTANT: Combo wallet cannot be used for purchases/upgrades
+    // Only regular wallet can be used for package purchases
+    // Calculate regular wallet: withdrawable + non_withdrawable (excludes combo wallet)
+    let regularBalance = 0;
     
-    // Use total_amount from wallet_breakdown (regular wallet only)
-    const totalBalance = parseFloat(walletBreakdown?.total_amount || walletBalance || 0);
+    if (walletBreakdown) {
+      const withdrawable = parseFloat(walletBreakdown.withdrawable_amount || 0);
+      const nonWithdrawable = parseFloat(walletBreakdown.non_withdrawable_amount || 0);
+      regularBalance = withdrawable + nonWithdrawable;
+    } else {
+      // Fallback to walletBalance (which should already exclude combo wallet)
+      regularBalance = parseFloat(walletBalance || 0);
+    }
+    
     const price = parseFloat(packagePrice || 0);
-    return totalBalance >= price;
+    return regularBalance >= price;
   };
 
   const getWalletBalanceDisplay = () => {
-    if (!walletBreakdown) return formatCurrency(walletBalance);
-    return formatCurrency(walletBreakdown.total_amount);
+    // Display only regular wallet balance (combo wallet is excluded)
+    // Use withdrawable + non_withdrawable if available, otherwise use walletBalance
+    if (walletBreakdown) {
+      const withdrawable = parseFloat(walletBreakdown.withdrawable_amount || 0);
+      const nonWithdrawable = parseFloat(walletBreakdown.non_withdrawable_amount || 0);
+      const regularWallet = withdrawable + nonWithdrawable;
+      
+      // If we have the breakdown, use it (excludes combo wallet)
+      if (regularWallet > 0) {
+        return formatCurrency(regularWallet);
+      }
+    }
+    
+    // Fallback to walletBalance (which should already exclude combo wallet)
+    return formatCurrency(walletBalance);
   };
 
   const getInsufficientBalanceMessage = () => {
@@ -84,58 +135,8 @@ const CreateRazorpay = ({ route }) => {
     return `Insufficient wallet balance. Required: ${formatCurrency(packagePrice)}, Available: ${formatCurrency(walletBreakdown.total_amount)} (Withdrawable: ${formatCurrency(walletBreakdown.withdrawable_amount)}, Non-withdrawable: ${formatCurrency(walletBreakdown.non_withdrawable_amount)})`;
   };
 
-  // Check if running in Expo Go
-  const isExpoGo = () => {
-    try {
-      // Expo Go runs with executionEnvironment as "storeClient"
-      return Constants.executionEnvironment === "storeClient" || 
-             Constants.appOwnership === "expo" ||
-             (typeof __DEV__ !== 'undefined' && __DEV__ && Constants.executionEnvironment !== "standalone");
-    } catch (error) {
-      // If Constants is not available, assume it's Expo Go
-      return true;
-    }
-  };
-
-  // Generate dummy payment data for Expo Go
-  const generateDummyPaymentData = (orderId) => {
-    return {
-      razorpay_order_id: orderId,
-      razorpay_payment_id: `pay_dummy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      razorpay_signature: `dummy_signature_${Date.now()}_${Math.random().toString(36).substr(2, 16)}`,
-    };
-  };
-
   const handlePayment = async (option) => {
     console.log("handlePayment", option);
-
-    // Check if running in Expo Go - bypass Razorpay SDK
-    if (isExpoGo()) {
-      console.log("Running in Expo Go - Using dummy payment data");
-      
-      // Show toast notification about dummy transaction
-      toast.hideAll();
-      toast.show("Using dummy transaction (Expo Go - Razorpay not available)", {
-        type: "info",
-        placement: "top",
-        duration: 3000,
-        offset: 30,
-        animationType: "slide-in",
-      });
-      
-      // Generate dummy payment data
-      const dummyData = generateDummyPaymentData(option.order_id);
-      console.log("Dummy payment data:", dummyData);
-      
-      // Small delay to simulate payment processing
-      setTimeout(async () => {
-        // Verify the dummy transaction
-        await handleVerifyRazorpayOrder(dummyData);
-      }, 1000);
-      return;
-    }
-
-    // Original Razorpay flow for standalone builds
     const options = {
       description: option.description,
       order_id: option.order_id,
@@ -156,51 +157,18 @@ const CreateRazorpay = ({ route }) => {
 
     setTimeout(async () => {
       try {
-        // Check if RazorpayCheckout is available (might not be in Expo Go)
-        if (!RazorpayCheckout || typeof RazorpayCheckout.open !== 'function') {
-          throw new Error("Razorpay SDK not available");
-        }
-        
         const data = await RazorpayCheckout.open(options);
         handleVerifyRazorpayOrder(data);
       } catch (error) {
         console.log("Error in Razorpay:", error);
-        
-        // If Razorpay SDK is not available, fall back to dummy transaction
-        if (error.message === "Razorpay SDK not available" || 
-            error.toString().includes("Native module") ||
-            error.toString().includes("not found")) {
-          console.log("Razorpay SDK not available - Using dummy transaction");
-          
-          toast.hideAll();
-          toast.show("Razorpay SDK not available - Using dummy transaction", {
-            type: "info",
-            placement: "top",
-            duration: 3000,
-            offset: 30,
-            animationType: "slide-in",
-          });
-          
-          // Generate dummy payment data
-          const dummyData = generateDummyPaymentData(options.order_id);
-          console.log("Dummy payment data:", dummyData);
-          
-          // Verify the dummy transaction
-          setTimeout(async () => {
-            await handleVerifyRazorpayOrder(dummyData);
-          }, 500);
-        } else {
-          // User canceled or other error
-          toast.hideAll();
-          toast.show("Payment canceled. Let us know if you need help!", {
-            type: "warning",
-            placement: "top",
-            duration: 4000,
-            offset: 30,
-            animationType: "slide-in",
-          });
-          setLoading(false);
-        }
+        toast.hideAll();
+        toast.show("Payment canceled. Let us know if you need help!", {
+          type: "warning",
+          placement: "top",
+          duration: 4000,
+          offset: 30,
+          animationType: "slide-in",
+        });
       }
     }, 1000);
   };
@@ -565,7 +533,7 @@ const CreateRazorpay = ({ route }) => {
         </Pressable>
       </View>
 
-      <View className="w-[90%] mx-auto mt-[45px]">
+      <View className="w-[90%] mx-auto mt-[45px]" style={{ paddingBottom: Platform.OS === 'ios' ? Math.min(insets.bottom + 10, 30) : 20 }}>
         <PrimaryButton
           onPress={handleCreateRazorpayOrder}
           disabled={paymentType === "wallet" && !isWalletBalanceSufficient()}
