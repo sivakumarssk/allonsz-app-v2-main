@@ -45,6 +45,10 @@ const ProfileDetails = () => {
   const [BankDetails, setBankDetails] = useState("");
   const [AadharDetails, setAadharDetails] = useState("");
   const [panDetails, setpanDetails] = useState("");
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [walletFrozen, setWalletFrozen] = useState(false);
+  const [blockReason, setBlockReason] = useState("");
+  const [freezeReason, setFreezeReason] = useState("");
 
   const [modalVisible, setmodalVisible] = useState(false);
 
@@ -78,6 +82,10 @@ const ProfileDetails = () => {
           result.combo_wallet = res.data.wallet_breakdown.combo_wallet;
         }
         setUserDetails(result);
+        setIsBlocked(!!result.is_blocked);
+        setWalletFrozen(!!result.wallet_frozen);
+        setBlockReason(result.block_reason || "");
+        setFreezeReason(result.freeze_reason || "");
 
         const Bank_Details = JSON.parse(result.bank_details);
         console.log("Bank_Details", Bank_Details);
@@ -350,6 +358,32 @@ const ProfileDetails = () => {
       />
 
       <NavBack>Profile Details</NavBack>
+
+      {/* Account blocked banner */}
+      {isBlocked && (
+        <View className="w-[95%] mx-auto mt-3 bg-red-100 border border-red-400 rounded-lg px-4 py-3">
+          <Text className="font-montmedium font-bold text-[13px] text-red-700">
+            Account Blocked
+          </Text>
+          <Text className="font-montmedium text-[12px] text-red-600 mt-1">
+            Your account has been blocked. Please contact support.
+            {blockReason ? `\nReason: ${blockReason}` : ""}
+          </Text>
+        </View>
+      )}
+
+      {/* Wallet frozen banner */}
+      {walletFrozen && (
+        <View className="w-[95%] mx-auto mt-2 bg-orange-100 border border-orange-400 rounded-lg px-4 py-3">
+          <Text className="font-montmedium font-bold text-[13px] text-orange-700">
+            Wallet Frozen
+          </Text>
+          <Text className="font-montmedium text-[12px] text-orange-600 mt-1">
+            Your wallet is frozen. Please contact support.
+            {freezeReason ? `\nReason: ${freezeReason}` : ""}
+          </Text>
+        </View>
+      )}
 
       <ScrollView>
         <View className="w-[90%] mx-auto mb-5">

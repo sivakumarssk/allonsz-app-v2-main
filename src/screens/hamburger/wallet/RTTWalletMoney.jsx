@@ -7,6 +7,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useCallback, useEffect, useState } from "react";
 import CustomStatusBar from "../../custom_screens/CustomStatusBar";
 import NavBack from "../../custom_screens/NavBack";
@@ -37,17 +38,18 @@ const RTTWalletMoney = ({ route }) => {
   const [requested_amount, setRequestedAmount] = useState("");
   const [History, setHistory] = useState([]);
   const [comboWalletBalance, setComboWalletBalance] = useState(0);
+  const [directDownlinersCount, setDirectDownlinersCount] = useState(0);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
       handleWithdrawHistory(); // Call the function when screen comes into focus
-      fetchComboWalletBalance(); // Fetch combo wallet balance
+      fetchProfileInfo(); // Fetch combo wallet balance + downliner count
     });
 
     return unsubscribe; // Cleanup listener on unmount
   }, [navigation, token]); // Add dependencies as needed
 
-  const fetchComboWalletBalance = async () => {
+  const fetchProfileInfo = async () => {
     try {
       const res = await get_ProfileDetails(token);
       if (res.status === 200) {
@@ -58,9 +60,11 @@ const RTTWalletMoney = ({ route }) => {
               0
           ) || 0;
         setComboWalletBalance(comboWallet);
+        const downlinersCount = res.data.direct_downliners_count ?? res.data.user?.direct_downliners_count ?? 0;
+        setDirectDownlinersCount(downlinersCount);
       }
     } catch (err) {
-      console.log("Error fetching combo wallet balance:", err);
+      console.log("Error fetching profile info:", err);
     }
   };
 
@@ -237,6 +241,21 @@ const RTTWalletMoney = ({ route }) => {
       />
 
       <NavBack>Back</NavBack>
+
+      {/* Direct downliner counter toward withdrawal unlock */}
+      <View className="w-[88%] mx-auto mt-3 mb-1 flex-row items-center gap-2 bg-[#f0f4ff] rounded-lg px-3 py-2">
+        <Ionicons name="people-outline" size={18} color="#44699c" />
+        <Text className="font-popmedium text-[13px] text-[#44699c]">
+          Direct referrals:{" "}
+          <Text className="font-semibold">{directDownlinersCount}/2</Text>
+        </Text>
+        {directDownlinersCount < 2 && (
+          <Text className="font-popmedium text-[11px] text-[#888] ml-1">
+            — Refer {2 - directDownlinersCount} more to unlock withdrawals
+          </Text>
+        )}
+      </View>
+
       {withdrawableAmount && (
         <View className="w-[88%] mx-auto my-3 bg-blue-50 p-4 rounded-lg border border-blue-200">
           <Text className="font-popmedium font-semibold text-[14px] leading-[20px] text-bigText mb-1">

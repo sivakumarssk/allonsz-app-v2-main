@@ -70,7 +70,20 @@ const EmailRegister = () => {
           if (status === 400) {
             console.log("Error With 400.");
           } else if (status === 422) {
-            setApiErrors(message);
+            // Blocked account errors should show as a toast, not an inline field error
+            if (message && message.toLowerCase().includes("blocked")) {
+              toast.hideAll();
+              toast.show(message, {
+                type: "danger",
+                placement: "top",
+                duration: 6000,
+                offset: 30,
+                style: { marginTop: 28 },
+                animationType: "slide-in",
+              });
+            } else {
+              setApiErrors(message);
+            }
             console.log("422 error", err.response.data);
           } else if (status === 301) {
             console.log("301 error", err.response.data);

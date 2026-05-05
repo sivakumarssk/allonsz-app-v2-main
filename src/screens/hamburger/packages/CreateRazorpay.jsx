@@ -364,6 +364,16 @@ const CreateRazorpay = ({ route }) => {
             offset: 30,
             animationType: "slide-in",
           });
+        } else if (status === 403) {
+          // Upgrade requires 4 direct downliners
+          toast.hideAll();
+          toast.show(errorMessage, {
+            type: "danger",
+            placement: "top",
+            duration: 6000,
+            offset: 30,
+            animationType: "slide-in",
+          });
         } else if (status === 422) {
           toast.hideAll();
           toast.show(errorMessage, {

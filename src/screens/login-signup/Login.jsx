@@ -107,8 +107,16 @@ const Login = () => {
               ...prev,
               password: err.response.data.error,
             }));
-          } else {
-            // console.log("error ekadey", err.response.data);
+          } else if (err.response.data.error) {
+            // Covers blocked account and any other server-side errors
+            toast.hideAll();
+            toast.show(err.response.data.error, {
+              type: "danger",
+              placement: "top",
+              duration: 6000,
+              offset: 30,
+              animationType: "slide-in",
+            });
           }
         } else if (err.response.status === 301) {
           console.log("Error 301");
