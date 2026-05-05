@@ -17,11 +17,14 @@ import { reSend_OTP, verify_OTP } from "../../Network/ApiCalling";
 import { useNavigation } from "@react-navigation/native";
 import { OtpInput } from "react-native-otp-entry";
 import { useToast } from "react-native-toast-notifications";
+import { useDispatch } from "react-redux";
 
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import PrimaryButton from "../custom_screens/PrimaryButton";
 import CustomStatusBar from "../custom_screens/CustomStatusBar";
 import Loader from "../custom_screens/Loader";
+import AsyncStorage_Calls from "../../utils/AsyncStorage_Calls";
+import { setKYCStatus, setKYCVerified } from "../redux/action/KYCverify";
 
 const EmailVerify = ({ route }) => {
   const { email, status } = route.params;
@@ -29,6 +32,7 @@ const EmailVerify = ({ route }) => {
 
   const toast = useToast();
   const navigation = useNavigation();
+  const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
 
@@ -81,6 +85,15 @@ const EmailVerify = ({ route }) => {
       // console.log(">>>>", res);
       if (res.status === 200) {
         // console.log("msg verify otp:", res.data.msg);
+
+        // For a brand-new registration, make sure no leftover KYC markers
+        // from a previous user / previous attempt on this device leak in.
+        // The setup screens will repopulate these as the user progresses.
+        if (status === "Create_Account") {
+          await AsyncStorage_Calls.clearKYCSession();
+          dispatch(setKYCStatus(null));
+          dispatch(setKYCVerified(false));
+        }
 
         toast.hideAll();
         toast.show(res.data.msg, {

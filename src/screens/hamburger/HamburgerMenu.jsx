@@ -381,13 +381,15 @@ const HamburgerMenu = () => {
       },
       {
         text: "Logout",
-        onPress: () => {
+        onPress: async () => {
+          // Wipe per-step KYC cache first so a different account logging
+          // in next does not inherit this user's progress.
+          await AsyncStorage_Calls.clearKYCSession();
+          dispatch(setKYCStatus(null));
+          dispatch(setKYCVerified(false));
           AsyncStorage_Calls.RemoveTokenJWT("Token", function (res, status) {
             if (status) {
-              // console.log("Async storage lo set", status);
               dispatch(setToken(null));
-              dispatch(setKYCVerified(false));
-              dispatch(setKYCStatus(null));
             } else {
               console.log("else", res);
             }

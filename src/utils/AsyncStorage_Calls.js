@@ -47,4 +47,50 @@ AsyncStorage_Calls.prototype.RemoveTokenJWT = function (key, callBack) {
   });
 };
 
+AsyncStorage_Calls.prototype.setAsync = function (key, value) {
+  return new Promise((resolve, reject) => {
+    AsyncStorage.setItem("Allonsz$:$:" + key, JSON.stringify(value), (err) => {
+      if (err) reject(err);
+      else resolve(true);
+    });
+  });
+};
+
+AsyncStorage_Calls.prototype.getAsync = function (key) {
+  return new Promise((resolve) => {
+    AsyncStorage.getItem("Allonsz$:$:" + key, (err, result) => {
+      if (err || !result) {
+        resolve(null);
+        return;
+      }
+      let dataSender = null;
+      try {
+        dataSender = JSON.parse(result);
+        if (typeof dataSender === "string") {
+          dataSender = dataSender.replaceAll('"', "");
+        }
+      } catch (_) {
+        dataSender = null;
+      }
+      resolve(dataSender);
+    });
+  });
+};
+
+AsyncStorage_Calls.prototype.removeAsync = function (key) {
+  return new Promise((resolve) => {
+    AsyncStorage.removeItem("Allonsz$:$:" + key, () => resolve(true));
+  });
+};
+
+// Wipe every locally cached KYC marker so the next user / next registration
+// starts from a clean slate. Token removal is handled separately by callers
+// because some flows (e.g. delete account) intentionally tear it down later.
+AsyncStorage_Calls.prototype.clearKYCSession = async function () {
+  await Promise.all([
+    this.removeAsync("userKYC"),
+    this.removeAsync("KYCVerification"),
+  ]);
+};
+
 export default new AsyncStorage_Calls();

@@ -118,6 +118,13 @@ const ExploreAllonsz = () => {
 
   const [isFirstLaunch, setIsFirstLaunch] = useState(null);
 
+  // Single boot-readiness flag. Navigator must NOT render until this is true,
+  // otherwise Stack.Navigator decides between login / KYC / Home based on a
+  // half-loaded redux state and the user sees screens flicker as the
+  // /api/user-status response trickles in.
+  const [isBootReady, setIsBootReady] = useState(false);
+  const hasBootedOnceRef = React.useRef(false);
+
   const [loaded, error] = useFonts({
     "Montserrat-Medium": require("../../src/styles/fonts/Montserrat-Medium.ttf"),
     "Montserrat-Regular": require("../../src/styles/fonts/Montserrat-Regular.ttf"),
@@ -227,63 +234,79 @@ const ExploreAllonsz = () => {
     }
   };
 
+  // First boot of the app: figure out auth + KYC state BEFORE the navigator
+  // renders. We do it in this order on purpose:
+  //   1. Read token + cached KYC from AsyncStorage (instant, offline-safe).
+  //   2. Hydrate redux from the cache so the UI has a sensible initial guess.
+  //   3. Race /api/user-status against a hard timeout so a slow backend
+  //      cannot block the splash forever; if the API wins it overrides the
+  //      cache, if the timeout wins we fall back to the cached state.
+  // After this finishes once, subsequent token changes (login / logout) only
+  // re-trigger getStatus — they don't re-do the cache hydration.
   useEffect(() => {
-    AsyncStorage_Calls.getTokenJWT("Token", function (res, status) {
-      if (status) {
-        // console.log("Async storage lo set###", status);
-        getStatus(status); //only this we can write login hit
-        setLoginStatus(true);
-        dispatch(setToken(status));
-      } else {
-        setLoginStatus(false);
-      }
-    });
-  }, [loginSelector]);
+    let cancelled = false;
 
-  useEffect(() => {
-    AsyncStorage_Calls.getTokenJWT("userKYC", function (res, status) {
-      if (status) {
-        // console.log("For Verification KYC in Async1>>>>>", status);
-        // setKYC_status(status);
-        dispatch(setKYCStatus(status));
-      } else {
-        // console.log("No KYC Verification Found in Async >>>", status);
-        // setKYC_status(null);
-        dispatch(setKYCStatus(null));
-      }
-    });
+    const boot = async () => {
+      const isFirstBoot = !hasBootedOnceRef.current;
 
-    AsyncStorage_Calls.getTokenJWT("KYCVerification", function (res, status) {
-      if (status) {
-        // console.log("KYC verification completed", status);
-        // setKYC_verify(true);
-        dispatch(setKYCVerified(true));
-      } else {
-        // console.log("KYC verification not completed", status);
-        // setKYC_verify(false);
-        dispatch(setKYCVerified(false));
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    const checkFirstLaunch = async () => {
       try {
-        const hasLaunched = await AsyncStorage.getItem("hasLaunched");
-        if (hasLaunched === null) {
-          // If no flag is found, set the onboarding screen to show and store the flag
-          await AsyncStorage.setItem("hasLaunched", "true");
-          setIsFirstLaunch(true);
+        const tokenVal = await AsyncStorage_Calls.getAsync("Token");
+
+        if (cancelled) return;
+
+        if (tokenVal) {
+          dispatch(setToken(tokenVal));
+          setLoginStatus(true);
+
+          if (isFirstBoot) {
+            const [cachedKyc, cachedVerified] = await Promise.all([
+              AsyncStorage_Calls.getAsync("userKYC"),
+              AsyncStorage_Calls.getAsync("KYCVerification"),
+            ]);
+            if (cancelled) return;
+            if (cachedKyc) dispatch(setKYCStatus(cachedKyc));
+            if (cachedVerified) dispatch(setKYCVerified(true));
+          }
+
+          // Hard timeout so a stuck/slow user-status response cannot pin the
+          // splash forever. getStatus already swallows its own errors, so the
+          // race never rejects; the timeout just lets us proceed.
+          await Promise.race([
+            getStatus(tokenVal),
+            new Promise((resolve) => setTimeout(resolve, 6000)),
+          ]);
         } else {
-          setIsFirstLaunch(false);
+          setLoginStatus(false);
         }
-      } catch (error) {
-        console.error("Error checking first launch: ", error);
+
+        if (isFirstBoot) {
+          try {
+            const hasLaunched = await AsyncStorage.getItem("hasLaunched");
+            if (cancelled) return;
+            if (hasLaunched === null) {
+              await AsyncStorage.setItem("hasLaunched", "true");
+              setIsFirstLaunch(true);
+            } else {
+              setIsFirstLaunch(false);
+            }
+          } catch (e) {
+            if (!cancelled) setIsFirstLaunch(false);
+          }
+        }
+      } finally {
+        if (!cancelled) {
+          hasBootedOnceRef.current = true;
+          setIsBootReady(true);
+        }
       }
     };
 
-    checkFirstLaunch();
-  }, []);
+    boot();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loginSelector]);
 
   useEffect(() => {
     if (loaded || error) {
@@ -311,9 +334,9 @@ const ExploreAllonsz = () => {
     <>
       <NetworkProvider>
         <NavigationContainer>
-          {isAnimatedSplashVisible && <AnimatedSplash />}
+          {(isAnimatedSplashVisible || !isBootReady) && <AnimatedSplash />}
 
-          {!isAnimatedSplashVisible && (
+          {!isAnimatedSplashVisible && isBootReady && (
             <Stack.Navigator>
               {loginStatus ? (
                 <>
